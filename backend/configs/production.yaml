@@ -1,0 +1,20 @@
+app:
+  name: AutoParts Pro API
+  environment: production
+  port: 8080
+
+log:
+  level: info
+
+database:
+  host: postgres
+  port: 5432
+  name: autoparts
+  user: postgres
+
+redis:
+  host: redis
+  port: 6379
+
+jwt:
+  expiration: 24h
