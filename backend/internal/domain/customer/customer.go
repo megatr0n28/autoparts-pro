@@ -1,23 +1,35 @@
 package customer
 
 import (
-	"github.com/megatr0n28/autoparts-pro/backend/internal/domain/common"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 type Customer struct {
-	common.BaseEntity
+	ID uuid.UUID
 
-	FirstName string `gorm:"size:100;not null"`
+	UserID uuid.UUID
 
-	LastName string `gorm:"size:100;not null"`
+	FirstName string
 
-	Email string `gorm:"size:255;uniqueIndex"`
+	LastName string
 
-	Phone string `gorm:"size:30"`
-}
+	Phone string
 
-func (Customer) TableName() string {
+	AddressLine1 string
 
-	return "customers"
+	AddressLine2 string
 
+	City string
+
+	State string
+
+	PostalCode string
+
+	Country string
+
+	CreatedAt time.Time
+
+	UpdatedAt time.Time
 }

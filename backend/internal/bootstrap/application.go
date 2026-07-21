@@ -8,6 +8,7 @@ import (
 	"github.com/megatr0n28/autoparts-pro/backend/internal/handler"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/logger"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/router"
+	"github.com/megatr0n28/autoparts-pro/backend/internal/service"
 	"go.uber.org/zap"
 )
 
@@ -41,6 +42,16 @@ func New() (*Application, error) {
 
 	repositories := NewRepositories(db)
 
+	customerService :=
+		service.NewCustomerService(
+			repositories.Customer,
+		)
+
+	customerHandler :=
+		handler.NewCustomerHandler(
+			customerService,
+		)
+
 	jwtManager := auth.NewJWTManager(
 		cfg.JWT.Secret,
 		cfg.JWT.Expiration,
@@ -70,6 +81,7 @@ func New() (*Application, error) {
 		jwtManager,
 		userHandler,
 		authHandler,
+		customerHandler,
 	)
 
 	app := &Application{

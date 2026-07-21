@@ -11,6 +11,7 @@ func New(
 	jwtManager *auth.JWTManager,
 	userHandler *handler.UserHandler,
 	authHandler *handler.AuthHandler,
+	customerHandler *handler.CustomerHandler,
 ) *gin.Engine {
 
 	gin.SetMode(gin.ReleaseMode)
@@ -56,6 +57,16 @@ func New(
 	protected.GET(
 		"/users/me",
 		userHandler.Me,
+	)
+
+	protected.GET(
+		"/customers/me",
+		customerHandler.Me,
+	)
+
+	protected.PUT(
+		"/customers/me",
+		customerHandler.Update,
 	)
 
 	protected.POST(
