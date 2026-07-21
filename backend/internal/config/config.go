@@ -41,6 +41,14 @@ type DatabaseConfig struct {
 	User string
 
 	Password string
+
+	SSLMode string
+
+	MaxIdleConns int
+
+	MaxOpenConns int
+
+	MaxLifetime time.Duration
 }
 
 type RedisConfig struct {
@@ -112,25 +120,16 @@ func Load() (*Config, error) {
 		},
 
 		Database: DatabaseConfig{
-
-			Host: v.GetString(
-				"database.host",
-			),
-
-			Port: v.GetInt(
-				"database.port",
-			),
-
-			Name: v.GetString(
-				"database.name",
-			),
-
-			User: v.GetString(
-				"database.user",
-			),
-
-			Password: v.GetString(
-				"database.password",
+			Host:         v.GetString("database.host"),
+			Port:         v.GetInt("database.port"),
+			Name:         v.GetString("database.name"),
+			User:         v.GetString("database.user"),
+			Password:     v.GetString("database.password"),
+			SSLMode:      v.GetString("database.sslmode"),
+			MaxIdleConns: v.GetInt("database.max_idle_conns"),
+			MaxOpenConns: v.GetInt("database.max_open_conns"),
+			MaxLifetime: time.Minute * time.Duration(
+				v.GetInt("database.max_lifetime"),
 			),
 		},
 

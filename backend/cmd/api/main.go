@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/megatr0n28/autoparts-pro/backend/internal/config"
+	"github.com/megatr0n28/autoparts-pro/backend/internal/database"
 
 	"github.com/megatr0n28/autoparts-pro/backend/internal/logger"
 )
@@ -38,6 +39,21 @@ func main() {
 
 	logger.Log.Info(
 		"configuration loaded",
+	)
+
+	err = database.Connect(
+		cfg.Database,
+	)
+
+	if err != nil {
+
+		logger.Log.Fatal(
+			"database connection failed",
+		)
+	}
+
+	logger.Log.Info(
+		"database connected",
 	)
 
 }

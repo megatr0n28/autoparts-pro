@@ -11,6 +11,14 @@ database:
   port: 5432
   name: autoparts
   user: postgres
+  password: postgres
+  sslmode: disable
+
+  max_idle_conns: 10
+
+  max_open_conns: 100
+
+  max_lifetime: 30
 
 redis:
   host: localhost
