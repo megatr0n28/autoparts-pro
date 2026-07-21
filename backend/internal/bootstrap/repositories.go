@@ -8,6 +8,7 @@ import (
 
 type Repositories struct {
 	Transaction *repository.TransactionManager
+	User        repository.UserRepository
 }
 
 func NewRepositories(
@@ -16,9 +17,8 @@ func NewRepositories(
 
 	return &Repositories{
 
-		Transaction: repository.NewTransactionManager(
-			db,
-		),
+		Transaction: repository.NewTransactionManager(db),
+		User:        repository.NewUserRepository(db),
 	}
 
 }
