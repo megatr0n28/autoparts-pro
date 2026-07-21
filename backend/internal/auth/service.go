@@ -3,6 +3,8 @@ package auth
 import (
 	"context"
 
+	"github.com/megatr0n28/autoparts-pro/backend/internal/domain/user"
+
 	"github.com/megatr0n28/autoparts-pro/backend/internal/repository"
 
 	"github.com/megatr0n28/autoparts-pro/backend/internal/security"
@@ -23,6 +25,35 @@ func NewService(
 		users: users,
 		jwt:   jwt,
 	}
+
+}
+
+func (s *Service) Register(
+	ctx context.Context,
+	u *user.User,
+	password string,
+) error {
+
+	hash, err :=
+		security.HashPassword(
+			password,
+		)
+
+	if err != nil {
+		return err
+	}
+
+	u.PasswordHash = hash
+
+	if u.Role == "" {
+		u.Role = "user"
+	}
+
+	return s.users.Create(
+		ctx,
+		u,
+	)
+
 }
 
 func (s *Service) Login(

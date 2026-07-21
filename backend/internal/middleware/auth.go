@@ -5,10 +5,12 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/megatr0n28/autoparts-pro/backend/internal/auth"
 )
 
 func JWTAuth(
-	secret string,
+	manager *auth.JWTManager,
 ) gin.HandlerFunc {
 
 	return func(c *gin.Context) {
@@ -33,7 +35,41 @@ func JWTAuth(
 			return
 		}
 
+		token :=
+			strings.TrimPrefix(
+				header,
+				"Bearer ",
+			)
+
+		claims, err :=
+			manager.ValidateToken(
+				token,
+			)
+
+		if err != nil {
+
+			c.AbortWithStatusJSON(
+				http.StatusUnauthorized,
+				gin.H{
+					"error": "invalid token",
+				},
+			)
+
+			return
+		}
+
+		c.Set(
+			"user_id",
+			claims.UserID,
+		)
+
+		c.Set(
+			"role",
+			claims.Role,
+		)
+
 		c.Next()
+
 	}
 
 }

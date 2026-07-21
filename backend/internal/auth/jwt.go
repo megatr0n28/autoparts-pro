@@ -21,6 +21,7 @@ func NewJWTManager(
 		Secret:     secret,
 		Expiration: expiration,
 	}
+
 }
 
 func (j *JWTManager) GenerateToken(
@@ -28,24 +29,67 @@ func (j *JWTManager) GenerateToken(
 	role string,
 ) (string, error) {
 
-	claims := jwt.MapClaims{
+	claims := Claims{
 
-		"user_id": userID,
+		UserID: userID,
 
-		"role": role,
+		Role: role,
 
-		"exp": time.Now().
-			Add(j.Expiration).
-			Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+
+			ExpiresAt: jwt.NewNumericDate(
+				time.Now().
+					Add(j.Expiration),
+			),
+
+			IssuedAt: jwt.NewNumericDate(
+				time.Now(),
+			),
+		},
 	}
 
-	token := jwt.NewWithClaims(
-		jwt.SigningMethodHS256,
-		claims,
-	)
+	token :=
+		jwt.NewWithClaims(
+			jwt.SigningMethodHS256,
+			claims,
+		)
 
 	return token.SignedString(
 		[]byte(j.Secret),
 	)
 
+}
+
+func (j *JWTManager) ValidateToken(
+	tokenString string,
+) (*Claims, error) {
+
+	token, err :=
+		jwt.ParseWithClaims(
+			tokenString,
+			&Claims{},
+			func(token *jwt.Token) (
+				interface{},
+				error,
+			) {
+
+				return []byte(j.Secret), nil
+
+			},
+		)
+
+	if err != nil {
+		return nil, err
+	}
+
+	claims, ok :=
+		token.Claims.(*Claims)
+
+	if !ok || !token.Valid {
+
+		return nil,
+			jwt.ErrTokenInvalidClaims
+	}
+
+	return claims, nil
 }
