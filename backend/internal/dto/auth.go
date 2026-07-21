@@ -16,6 +16,20 @@ type LoginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
-type TokenResponse struct {
+// LoginResponse is returned after successful authentication
+type LoginResponse struct {
 	AccessToken string `json:"access_token"`
+
+	RefreshToken string `json:"refresh_token"`
+}
+
+// TokenResponse is used when only returning a new access token
+type TokenResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+// RefreshRequest is used for refresh and logout operations
+type RefreshRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
 }

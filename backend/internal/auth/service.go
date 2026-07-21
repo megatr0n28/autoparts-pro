@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/domain/user"
 
 	"github.com/megatr0n28/autoparts-pro/backend/internal/repository"
@@ -13,17 +14,20 @@ import (
 type Service struct {
 	users repository.UserRepository
 
-	jwt *JWTManager
+	jwt     *JWTManager
+	refresh *RefreshTokenService
 }
 
 func NewService(
 	users repository.UserRepository,
 	jwt *JWTManager,
+	refresh *RefreshTokenService,
 ) *Service {
 
 	return &Service{
-		users: users,
-		jwt:   jwt,
+		users:   users,
+		jwt:     jwt,
+		refresh: refresh,
 	}
 
 }
@@ -60,7 +64,9 @@ func (s *Service) Login(
 	ctx context.Context,
 	email string,
 	password string,
-) (string, error) {
+	device string,
+	ip string,
+) (string, string, error) {
 
 	u, err :=
 		s.users.FindByEmail(
@@ -69,7 +75,7 @@ func (s *Service) Login(
 		)
 
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	err =
@@ -79,12 +85,128 @@ func (s *Service) Login(
 		)
 
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return s.jwt.GenerateToken(
-		u.ID.String(),
-		u.Role,
+	accessToken, err :=
+		s.jwt.GenerateToken(
+			u.ID.String(),
+			u.Role,
+		)
+
+	if err != nil {
+		return "", "", err
+	}
+
+	refreshToken, err :=
+		s.refresh.Create(
+			ctx,
+			u.ID,
+			device,
+			ip,
+		)
+
+	if err != nil {
+
+		return "",
+			"",
+			err
+	}
+
+	return accessToken, refreshToken, nil
+}
+
+func (s *Service) Refresh(
+	ctx context.Context,
+	raw string,
+	device string,
+	ip string,
+) (string, string, error) {
+
+	old,
+		err :=
+		s.refresh.Validate(
+			ctx,
+			raw,
+		)
+
+	if err != nil {
+
+		return "",
+			"",
+			err
+
+	}
+
+	newRefresh,
+		err :=
+		s.refresh.Rotate(
+			ctx,
+			old,
+			device,
+			ip,
+		)
+
+	if err != nil {
+
+		return "",
+			"",
+			err
+
+	}
+
+	access,
+		err :=
+		s.jwt.GenerateToken(
+			old.UserID.String(),
+			"user",
+		)
+
+	if err != nil {
+
+		return "",
+			"",
+			err
+
+	}
+
+	return access, newRefresh, nil
+
+}
+
+func (s *Service) Logout(
+	ctx context.Context,
+	raw string,
+) error {
+
+	token,
+		err :=
+		s.refresh.Validate(
+			ctx,
+			raw,
+		)
+
+	if err != nil {
+
+		return err
+
+	}
+
+	return s.refresh.Revoke(
+		ctx,
+		token.ID,
+	)
+
+}
+
+func (s *Service) LogoutAll(
+	ctx context.Context,
+	userID uuid.UUID,
+) error {
+
+	return s.refresh.DeleteUserTokens(
+		ctx,
+		userID,
 	)
 
 }

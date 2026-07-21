@@ -25,6 +25,6 @@ redis:
   port: 6379
 
 jwt:
-  secret: development-secret-change-me
-  expiration: 24h
-  refresh_expiration: 168h
+  secret: development-secret
+  expiration: "15m"
+  refresh_expiration: "720h"

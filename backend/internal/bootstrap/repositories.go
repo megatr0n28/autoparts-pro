@@ -4,11 +4,13 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/megatr0n28/autoparts-pro/backend/internal/repository"
+	"github.com/megatr0n28/autoparts-pro/backend/internal/repository/postgres"
 )
 
 type Repositories struct {
-	Transaction *repository.TransactionManager
-	User        repository.UserRepository
+	Transaction   *repository.TransactionManager
+	User          repository.UserRepository
+	RefreshTokens repository.RefreshTokenRepository
 }
 
 func NewRepositories(
@@ -17,8 +19,9 @@ func NewRepositories(
 
 	return &Repositories{
 
-		Transaction: repository.NewTransactionManager(db),
-		User:        repository.NewUserRepository(db),
+		Transaction:   repository.NewTransactionManager(db),
+		User:          repository.NewUserRepository(db),
+		RefreshTokens: postgres.NewRefreshTokenRepository(db),
 	}
 
 }

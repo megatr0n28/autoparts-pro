@@ -46,10 +46,19 @@ func New() (*Application, error) {
 		cfg.JWT.Expiration,
 	)
 
-	authService := auth.NewService(
-		repositories.User,
-		jwtManager,
-	)
+	refreshService :=
+		auth.NewRefreshTokenService(
+			repositories.RefreshTokens,
+			jwtManager,
+			cfg.JWT.RefreshExpiration,
+		)
+
+	authService :=
+		auth.NewService(
+			repositories.User,
+			jwtManager,
+			refreshService,
+		)
 
 	authHandler := handler.NewAuthHandler(
 		authService,

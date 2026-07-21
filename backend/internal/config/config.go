@@ -31,15 +31,15 @@ type LogConfig struct {
 }
 
 type DatabaseConfig struct {
-	Host         string `mapstructure:"host"`
-	Port         int    `mapstructure:"port"`
-	Name         string `mapstructure:"name"`
-	User         string `mapstructure:"user"`
-	Password     string `mapstructure:"password"`
-	SSLMode      string `mapstructure:"sslmode"`
-	MaxIdleConns int    `mapstructure:"max_idle_conns"`
-	MaxOpenConns int    `mapstructure:"max_open_conns"`
-	MaxLifetime  time.Duration
+	Host         string        `mapstructure:"host"`
+	Port         int           `mapstructure:"port"`
+	Name         string        `mapstructure:"name"`
+	User         string        `mapstructure:"user"`
+	Password     string        `mapstructure:"password"`
+	SSLMode      string        `mapstructure:"sslmode"`
+	MaxIdleConns int           `mapstructure:"max_idle_conns"`
+	MaxOpenConns int           `mapstructure:"max_open_conns"`
+	MaxLifetime  time.Duration `mapstructure:"max_lifetime"`
 }
 
 type RedisConfig struct {
@@ -49,8 +49,8 @@ type RedisConfig struct {
 }
 
 type JWTConfig struct {
-	Secret            string `mapstructure:"secret"`
-	Expiration        time.Duration
+	Secret            string        `mapstructure:"secret"`
+	Expiration        time.Duration `mapstructure:"expiration"`
 	RefreshExpiration time.Duration `mapstructure:"refresh_expiration"`
 }
 
@@ -98,7 +98,20 @@ func Load() (*Config, error) {
 		cfg.JWT.Expiration = 24 * time.Hour
 	}
 
-	fmt.Printf("Loaded configuration: %s\n", env)
+	refreshExpiration, err := time.ParseDuration(
+		v.GetString("jwt.refresh_expiration"),
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	cfg.JWT.RefreshExpiration = refreshExpiration
+
+	fmt.Printf(
+		"Loaded configuration: %s\n",
+		env,
+	)
 
 	return &cfg, nil
 }

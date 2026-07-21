@@ -17,4 +17,6 @@ redis:
   port: 6379
 
 jwt:
-  expiration: 24h
+  secret: ${JWT_SECRET}
+  expiration: "15m"
+  refresh_expiration: "720h"

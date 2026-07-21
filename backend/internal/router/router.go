@@ -35,6 +35,16 @@ func New(
 		authHandler.Register,
 	)
 
+	authRoutes.POST(
+		"/refresh",
+		authHandler.Refresh,
+	)
+
+	authRoutes.POST(
+		"/logout",
+		authHandler.Logout,
+	)
+
 	//
 	// Protected user routes
 	//
@@ -46,6 +56,11 @@ func New(
 	protected.GET(
 		"/users/me",
 		userHandler.Me,
+	)
+
+	protected.POST(
+		"/auth/logout-all",
+		authHandler.LogoutAll,
 	)
 
 	//
