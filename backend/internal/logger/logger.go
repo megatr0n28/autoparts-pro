@@ -4,34 +4,12 @@ import (
 	"go.uber.org/zap"
 )
 
-var Log *zap.Logger
-
-func Initialize(
-	level string,
-) error {
-
-	var err error
-
-	Log, err =
-		zap.NewProduction()
+func New(level string) (*zap.Logger, error) {
+	cfg := zap.NewProductionConfig()
 
 	if level == "debug" {
-
-		Log, err =
-			zap.NewDevelopment()
-
+		cfg = zap.NewDevelopmentConfig()
 	}
 
-	return err
-
-}
-
-func Sync() {
-
-	if Log != nil {
-
-		Log.Sync()
-
-	}
-
+	return cfg.Build()
 }

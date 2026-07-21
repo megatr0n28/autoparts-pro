@@ -9,7 +9,7 @@ import (
 	"github.com/megatr0n28/autoparts-pro/backend/internal/config"
 )
 
-func Connect(cfg config.DatabaseConfig) error {
+func Connect(cfg config.DatabaseConfig) (*gorm.DB, error) {
 
 	dsn := fmt.Sprintf(
 
@@ -37,14 +37,14 @@ func Connect(cfg config.DatabaseConfig) error {
 
 	if err != nil {
 
-		return err
+		return nil, err
 	}
 
 	sqlDB, err := db.DB()
 
 	if err != nil {
 
-		return err
+		return nil, err
 	}
 
 	sqlDB.SetMaxIdleConns(
@@ -61,11 +61,9 @@ func Connect(cfg config.DatabaseConfig) error {
 
 	if err := sqlDB.Ping(); err != nil {
 
-		return err
+		return nil, err
 	}
 
-	DB = db
-
-	return nil
+	return db, nil
 
 }
