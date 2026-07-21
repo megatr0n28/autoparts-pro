@@ -3,7 +3,6 @@ package bootstrap
 import (
 	"github.com/megatr0n28/autoparts-pro/backend/internal/config"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/database"
-	"github.com/megatr0n28/autoparts-pro/backend/internal/domain/customer"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/logger"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -28,13 +27,8 @@ func New() (*Application, error) {
 	}
 
 	db, err := database.Connect(cfg.Database)
-	if err != nil {
-		return nil, err
-	}
-
-	err = database.AutoMigrate(
-		db,
-		&customer.Customer{},
+	err = database.RunMigrations(
+		cfg.Database,
 	)
 
 	if err != nil {
