@@ -20,4 +20,14 @@ func main() {
 	app.Logger.Info(
 		"AutoParts Pro API started",
 	)
+
+	err =
+		app.Router.Run(":8080")
+
+	if err != nil {
+		app.Logger.Fatal(
+			"server failed",
+		)
+	}
+
 }

@@ -1,9 +1,13 @@
 package bootstrap
 
 import (
+	"github.com/gin-gonic/gin"
+	"github.com/megatr0n28/autoparts-pro/backend/internal/auth"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/config"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/database"
+	"github.com/megatr0n28/autoparts-pro/backend/internal/handler"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/logger"
+	"github.com/megatr0n28/autoparts-pro/backend/internal/router"
 	"go.uber.org/zap"
 )
 
@@ -11,6 +15,7 @@ type Application struct {
 	Config       *config.Config
 	Logger       *zap.Logger
 	Repositories *Repositories
+	Router       *gin.Engine
 }
 
 func New() (*Application, error) {
@@ -26,19 +31,43 @@ func New() (*Application, error) {
 	}
 
 	db, err := database.Connect(cfg.Database)
-	repositories := NewRepositories(db)
-	err = database.RunMigrations(
-		cfg.Database,
-	)
-
 	if err != nil {
 		return nil, err
 	}
+
+	if err := database.RunMigrations(cfg.Database); err != nil {
+		return nil, err
+	}
+
+	repositories := NewRepositories(db)
+
+	jwtManager := auth.NewJWTManager(
+		cfg.JWT.Secret,
+		cfg.JWT.Expiration,
+	)
+
+	authService := auth.NewService(
+		repositories.User,
+		jwtManager,
+	)
+
+	authHandler := handler.NewAuthHandler(
+		authService,
+	)
+
+	userHandler := handler.NewUserHandler()
+
+	appRouter := router.New(
+		jwtManager,
+		userHandler,
+		authHandler,
+	)
 
 	app := &Application{
 		Config:       cfg,
 		Logger:       log,
 		Repositories: repositories,
+		Router:       appRouter,
 	}
 
 	return app, nil

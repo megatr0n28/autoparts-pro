@@ -2,40 +2,76 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/megatr0n28/autoparts-pro/backend/internal/auth"
+	"github.com/megatr0n28/autoparts-pro/backend/internal/handler"
+	"github.com/megatr0n28/autoparts-pro/backend/internal/middleware"
 )
 
-func New() *gin.Engine {
+func New(
+	jwtManager *auth.JWTManager,
+	userHandler *handler.UserHandler,
+	authHandler *handler.AuthHandler,
+) *gin.Engine {
 
+	gin.SetMode(gin.ReleaseMode)
 	r :=
 		gin.Default()
 
 	api :=
 		r.Group("/api/v1")
 
+	//
+	// Public authentication routes
+	//
 	authRoutes := api.Group("/auth")
 
 	authRoutes.POST(
 		"/login",
+		authHandler.Login,
+	)
+
+	authRoutes.POST(
+		"/register",
+		authHandler.Register,
+	)
+
+	//
+	// Protected user routes
+	//
+	protected := api.Group("")
+	protected.Use(
+		middleware.JWTAuth(jwtManager),
+	)
+
+	protected.GET(
+		"/users/me",
+		userHandler.Me,
+	)
+
+	//
+	// Admin routes
+	//
+	admin :=
+		api.Group("/admin")
+
+	admin.Use(
+		middleware.JWTAuth(jwtManager),
+	)
+
+	admin.Use(
+		middleware.RequireRole(
+			"admin",
+		),
+	)
+
+	admin.GET(
+		"/health",
 		func(c *gin.Context) {
 
 			c.JSON(
 				200,
 				gin.H{
-					"message": "login endpoint",
-				},
-			)
-
-		},
-	)
-
-	authRoutes.POST(
-		"/register",
-		func(c *gin.Context) {
-
-			c.JSON(
-				201,
-				gin.H{
-					"message": "register endpoint",
+					"status": "admin access",
 				},
 			)
 
