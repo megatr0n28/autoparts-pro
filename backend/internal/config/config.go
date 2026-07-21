@@ -43,9 +43,9 @@ type DatabaseConfig struct {
 }
 
 type RedisConfig struct {
-	Host string
+	Host string `mapstructure:"host"`
 
-	Port int
+	Port int `mapstructure:"port"`
 }
 
 type JWTConfig struct {

@@ -20,3 +20,18 @@ migrate-up:
 
 migrate-down:
 	go run ./cmd/migrate down
+
+docker-up:
+	docker-compose up -d
+
+
+docker-down:
+	docker-compose down
+
+
+docker-reset:
+	docker-compose down -v
+
+
+docker-logs:
+	docker-compose logs -f
