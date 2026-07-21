@@ -20,7 +20,7 @@ func NewTransactionManager(
 
 }
 
-func (tm *TransactionManager) Transaction(
+func (tm *TransactionManager) Execute(
 
 	ctx context.Context,
 

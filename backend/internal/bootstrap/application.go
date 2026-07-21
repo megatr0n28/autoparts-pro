@@ -5,13 +5,11 @@ import (
 	"github.com/megatr0n28/autoparts-pro/backend/internal/database"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/logger"
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 )
 
 type Application struct {
 	Config       *config.Config
 	Logger       *zap.Logger
-	DB           *gorm.DB
 	Repositories *Repositories
 }
 
@@ -28,10 +26,7 @@ func New() (*Application, error) {
 	}
 
 	db, err := database.Connect(cfg.Database)
-	repositories :=
-		NewRepositories(
-			db,
-		)
+	repositories := NewRepositories(db)
 	err = database.RunMigrations(
 		cfg.Database,
 	)
@@ -43,7 +38,6 @@ func New() (*Application, error) {
 	app := &Application{
 		Config:       cfg,
 		Logger:       log,
-		DB:           db,
 		Repositories: repositories,
 	}
 
