@@ -9,9 +9,10 @@ import (
 )
 
 type Application struct {
-	Config *config.Config
-	Logger *zap.Logger
-	DB     *gorm.DB
+	Config       *config.Config
+	Logger       *zap.Logger
+	DB           *gorm.DB
+	Repositories *Repositories
 }
 
 func New() (*Application, error) {
@@ -27,6 +28,10 @@ func New() (*Application, error) {
 	}
 
 	db, err := database.Connect(cfg.Database)
+	repositories :=
+		NewRepositories(
+			db,
+		)
 	err = database.RunMigrations(
 		cfg.Database,
 	)
@@ -36,9 +41,10 @@ func New() (*Application, error) {
 	}
 
 	app := &Application{
-		Config: cfg,
-		Logger: log,
-		DB:     db,
+		Config:       cfg,
+		Logger:       log,
+		DB:           db,
+		Repositories: repositories,
 	}
 
 	return app, nil
