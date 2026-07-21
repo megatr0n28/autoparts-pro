@@ -67,3 +67,12 @@ func Connect(cfg config.DatabaseConfig) (*gorm.DB, error) {
 	return db, nil
 
 }
+
+func AutoMigrate(
+	db *gorm.DB,
+	models ...interface{},
+) error {
+
+	return db.AutoMigrate(models...)
+
+}
