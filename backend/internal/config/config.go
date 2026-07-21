@@ -2,21 +2,20 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
 
 type Config struct {
-	App AppConfig
-
-	Log LogConfig
-
-	Database DatabaseConfig
-
-	Redis RedisConfig
-
-	JWT JWTConfig
+	App      AppConfig      `mapstructure:"app"`
+	Log      LogConfig      `mapstructure:"log"`
+	Database DatabaseConfig `mapstructure:"database"`
+	Redis    RedisConfig    `mapstructure:"redis"`
+	JWT      JWTConfig      `mapstructure:"jwt"`
 }
 
 type AppConfig struct {
@@ -32,23 +31,15 @@ type LogConfig struct {
 }
 
 type DatabaseConfig struct {
-	Host string
-
-	Port int
-
-	Name string
-
-	User string
-
-	Password string
-
-	SSLMode string
-
-	MaxIdleConns int
-
-	MaxOpenConns int
-
-	MaxLifetime time.Duration
+	Host         string `mapstructure:"host"`
+	Port         int    `mapstructure:"port"`
+	Name         string `mapstructure:"name"`
+	User         string `mapstructure:"user"`
+	Password     string `mapstructure:"password"`
+	SSLMode      string `mapstructure:"sslmode"`
+	MaxIdleConns int    `mapstructure:"max_idle_conns"`
+	MaxOpenConns int    `mapstructure:"max_open_conns"`
+	MaxLifetime  time.Duration
 }
 
 type RedisConfig struct {
@@ -63,17 +54,28 @@ type JWTConfig struct {
 
 func Load() (*Config, error) {
 
+	// Load .env if present
+	_ = godotenv.Load()
+
 	v := viper.New()
 
-	v.SetConfigName("development")
+	env := os.Getenv("APP_ENV")
+	if env == "" {
+		env = "development"
+	}
 
+	v.SetConfigName(env)
 	v.SetConfigType("yaml")
 
 	v.AddConfigPath("./configs")
+	v.AddConfigPath("../configs")
 
+	// Environment variables override YAML
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
 
-	if err := v.ReadInConfig(); err != nil {
+	err := v.ReadInConfig()
+	if err != nil {
 
 		return nil, fmt.Errorf(
 			"failed loading config: %w",
@@ -82,73 +84,19 @@ func Load() (*Config, error) {
 
 	}
 
-	expiration, err :=
-		time.ParseDuration(
-			v.GetString(
-				"jwt.expiration",
-			),
-		)
+	var cfg Config
 
+	if err := v.Unmarshal(&cfg); err != nil {
+		return nil, err
+	}
+
+	// Parse JWT duration because Unmarshal doesn't convert "24h" into time.Duration automatically.
+	cfg.JWT.Expiration, err = time.ParseDuration(v.GetString("jwt.expiration"))
 	if err != nil {
-
-		expiration = 24 * time.Hour
-
+		cfg.JWT.Expiration = 24 * time.Hour
 	}
 
-	config := &Config{
+	fmt.Printf("Loaded configuration: %s\n", env)
 
-		App: AppConfig{
-
-			Name: v.GetString(
-				"app.name",
-			),
-
-			Environment: v.GetString(
-				"app.environment",
-			),
-
-			Port: v.GetInt(
-				"app.port",
-			),
-		},
-
-		Log: LogConfig{
-
-			Level: v.GetString(
-				"log.level",
-			),
-		},
-
-		Database: DatabaseConfig{
-			Host:         v.GetString("database.host"),
-			Port:         v.GetInt("database.port"),
-			Name:         v.GetString("database.name"),
-			User:         v.GetString("database.user"),
-			Password:     v.GetString("database.password"),
-			SSLMode:      v.GetString("database.sslmode"),
-			MaxIdleConns: v.GetInt("database.max_idle_conns"),
-			MaxOpenConns: v.GetInt("database.max_open_conns"),
-			MaxLifetime: time.Minute * time.Duration(
-				v.GetInt("database.max_lifetime"),
-			),
-		},
-
-		Redis: RedisConfig{
-
-			Host: v.GetString(
-				"redis.host",
-			),
-
-			Port: v.GetInt(
-				"redis.port",
-			),
-		},
-
-		JWT: JWTConfig{
-
-			Expiration: expiration,
-		},
-	}
-
-	return config, nil
+	return &cfg, nil
 }

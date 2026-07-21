@@ -5,6 +5,7 @@ import (
 
 	"github.com/megatr0n28/autoparts-pro/backend/internal/config"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/database"
+	"go.uber.org/zap"
 
 	"github.com/megatr0n28/autoparts-pro/backend/internal/logger"
 )
@@ -20,15 +21,9 @@ func main() {
 
 	}
 
-	err =
-		logger.Initialize(
-			cfg.Log.Level,
-		)
-
+	err = logger.Initialize(cfg.Log.Level)
 	if err != nil {
-
 		log.Fatal(err)
-
 	}
 
 	defer logger.Sync()
@@ -38,7 +33,8 @@ func main() {
 	)
 
 	logger.Log.Info(
-		"configuration loaded",
+		"Configuration loaded",
+		zap.String("environment", cfg.App.Environment),
 	)
 
 	err = database.Connect(
