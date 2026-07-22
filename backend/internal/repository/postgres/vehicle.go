@@ -73,3 +73,71 @@ func (r *VehicleRepository) GetByCustomer(
 
 	return vehicles, err
 }
+
+func (r *VehicleRepository) Update(
+	ctx context.Context,
+	v *vehicle.Vehicle,
+) error {
+
+	return r.db.
+		WithContext(ctx).
+		Save(v).
+		Error
+}
+
+func (r *VehicleRepository) Delete(
+	ctx context.Context,
+	id uuid.UUID,
+	customerID uuid.UUID,
+) error {
+
+	return r.db.
+		WithContext(ctx).
+		Where(
+			"id = ? AND customer_id = ?",
+			id,
+			customerID,
+		).
+		Delete(&vehicle.Vehicle{}).
+		Error
+}
+
+func (r *VehicleRepository) ClearPrimary(
+	ctx context.Context,
+	customerID uuid.UUID,
+) error {
+
+	return r.db.
+		WithContext(ctx).
+		Model(&vehicle.Vehicle{}).
+		Where(
+			"customer_id = ?",
+			customerID,
+		).
+		Update(
+			"is_primary",
+			false,
+		).
+		Error
+}
+
+func (r *VehicleRepository) SetPrimary(
+	ctx context.Context,
+	id uuid.UUID,
+	customerID uuid.UUID,
+) error {
+
+	return r.db.
+		WithContext(ctx).
+		Model(&vehicle.Vehicle{}).
+		Where(
+			"id = ? AND customer_id = ?",
+			id,
+			customerID,
+		).
+		Update(
+			"is_primary",
+			true,
+		).
+		Error
+}

@@ -43,3 +43,36 @@ func (s *Service) List(
 		customerID,
 	)
 }
+
+func (s *Service) Delete(
+	ctx context.Context,
+	id uuid.UUID,
+	customerID uuid.UUID,
+) error {
+
+	return s.repo.Delete(
+		ctx,
+		id,
+		customerID,
+	)
+}
+
+func (s *Service) SetPrimary(
+	ctx context.Context,
+	id uuid.UUID,
+	customerID uuid.UUID,
+) error {
+
+	if err := s.repo.ClearPrimary(
+		ctx,
+		customerID,
+	); err != nil {
+		return err
+	}
+
+	return s.repo.SetPrimary(
+		ctx,
+		id,
+		customerID,
+	)
+}

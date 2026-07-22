@@ -135,3 +135,80 @@ func (h *VehicleHandler) List(
 		vehicles,
 	)
 }
+
+func (h *VehicleHandler) Delete(
+	c *gin.Context,
+) {
+
+	customerID :=
+		uuid.MustParse(
+			c.GetString("customer_id"),
+		)
+
+	id :=
+		uuid.MustParse(
+			c.Param("id"),
+		)
+
+	err :=
+		h.service.Delete(
+			c,
+			id,
+			customerID,
+		)
+
+	if err != nil {
+
+		c.JSON(
+			500,
+			gin.H{
+				"error": err.Error(),
+			},
+		)
+
+		return
+	}
+
+	c.Status(204)
+}
+
+func (h *VehicleHandler) SetPrimary(
+	c *gin.Context,
+) {
+
+	customerID :=
+		uuid.MustParse(
+			c.GetString("customer_id"),
+		)
+
+	id :=
+		uuid.MustParse(
+			c.Param("id"),
+		)
+
+	err :=
+		h.service.SetPrimary(
+			c,
+			id,
+			customerID,
+		)
+
+	if err != nil {
+
+		c.JSON(
+			500,
+			gin.H{
+				"error": err.Error(),
+			},
+		)
+
+		return
+	}
+
+	c.JSON(
+		200,
+		gin.H{
+			"message": "primary vehicle updated",
+		},
+	)
+}

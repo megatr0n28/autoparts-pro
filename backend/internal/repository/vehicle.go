@@ -23,4 +23,26 @@ type VehicleRepository interface {
 		ctx context.Context,
 		customerID uuid.UUID,
 	) ([]vehicle.Vehicle, error)
+
+	Update(
+		ctx context.Context,
+		v *vehicle.Vehicle,
+	) error
+
+	Delete(
+		ctx context.Context,
+		id uuid.UUID,
+		customerID uuid.UUID,
+	) error
+
+	SetPrimary(
+		ctx context.Context,
+		id uuid.UUID,
+		customerID uuid.UUID,
+	) error
+
+	ClearPrimary(
+		ctx context.Context,
+		customerID uuid.UUID,
+	) error
 }

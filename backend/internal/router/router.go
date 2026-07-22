@@ -71,6 +71,16 @@ func New(
 		vehicleHandler.Create,
 	)
 
+	vehicles.DELETE(
+		"/:id",
+		vehicleHandler.Delete,
+	)
+
+	vehicles.PATCH(
+		"/:id/primary",
+		vehicleHandler.SetPrimary,
+	)
+
 	protected.GET(
 		"/customers/me",
 		customerHandler.Me,
