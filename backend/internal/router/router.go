@@ -5,6 +5,7 @@ import (
 	"github.com/megatr0n28/autoparts-pro/backend/internal/auth"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/handler"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/middleware"
+	"github.com/megatr0n28/autoparts-pro/backend/internal/repository"
 )
 
 func New(
@@ -13,6 +14,7 @@ func New(
 	authHandler *handler.AuthHandler,
 	customerHandler *handler.CustomerHandler,
 	vehicleHandler *handler.VehicleHandler,
+	customerRepository repository.CustomerRepository,
 ) *gin.Engine {
 
 	gin.SetMode(gin.ReleaseMode)
@@ -52,7 +54,10 @@ func New(
 	//
 	protected := api.Group("")
 	protected.Use(
-		middleware.JWTAuth(jwtManager),
+		middleware.JWTAuth(
+			jwtManager,
+			customerRepository,
+		),
 	)
 
 	protected.GET(
@@ -81,6 +86,11 @@ func New(
 		vehicleHandler.SetPrimary,
 	)
 
+	vehicles.PUT(
+		"/:id",
+		vehicleHandler.Update,
+	)
+
 	protected.GET(
 		"/customers/me",
 		customerHandler.Me,
@@ -103,7 +113,10 @@ func New(
 		api.Group("/admin")
 
 	admin.Use(
-		middleware.JWTAuth(jwtManager),
+		middleware.JWTAuth(
+			jwtManager,
+			customerRepository,
+		),
 	)
 
 	admin.Use(

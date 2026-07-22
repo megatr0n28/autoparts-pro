@@ -212,3 +212,88 @@ func (h *VehicleHandler) SetPrimary(
 		},
 	)
 }
+
+func (h *VehicleHandler) Update(
+	c *gin.Context,
+) {
+
+	customerID :=
+		uuid.MustParse(
+			c.GetString("customer_id"),
+		)
+
+	id :=
+		uuid.MustParse(
+			c.Param("id"),
+		)
+
+	var request dto.UpdateVehicleRequest
+
+	if err :=
+		c.ShouldBindJSON(&request); err != nil {
+
+		c.JSON(
+			400,
+			gin.H{
+				"error": err.Error(),
+			},
+		)
+
+		return
+	}
+
+	v :=
+		vehicleDomain.Vehicle{
+
+			VIN: request.VIN,
+
+			Year: request.Year,
+
+			Make: request.Make,
+
+			Model: request.Model,
+
+			Trim: request.Trim,
+
+			Engine: request.Engine,
+
+			Transmission: request.Transmission,
+
+			Drivetrain: request.Drivetrain,
+
+			Mileage: request.Mileage,
+
+			Color: request.Color,
+
+			LicensePlate: request.LicensePlate,
+
+			State: request.State,
+		}
+
+	err :=
+		h.service.Update(
+			c,
+			id,
+			customerID,
+			v,
+		)
+
+	if err != nil {
+
+		c.JSON(
+			500,
+			gin.H{
+				"error": err.Error(),
+			},
+		)
+
+		return
+	}
+
+	c.JSON(
+		200,
+		gin.H{
+			"message": "vehicle updated",
+		},
+	)
+}

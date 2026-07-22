@@ -44,6 +44,8 @@ func New() (*Application, error) {
 
 	repositories := NewRepositories(db)
 
+	customerRepository := repositories.Customer
+
 	vehicleService :=
 		vehicle.NewService(
 			repositories.Vehicle,
@@ -96,6 +98,7 @@ func New() (*Application, error) {
 		authHandler,
 		customerHandler,
 		vehicleHandler,
+		customerRepository,
 	)
 
 	app := &Application{

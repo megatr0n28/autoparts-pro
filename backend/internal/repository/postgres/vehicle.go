@@ -141,3 +141,45 @@ func (r *VehicleRepository) SetPrimary(
 		).
 		Error
 }
+
+func (r *VehicleRepository) GetCustomerVehicle(
+	ctx context.Context,
+	id uuid.UUID,
+	customerID uuid.UUID,
+) (*vehicle.Vehicle, error) {
+
+	var v vehicle.Vehicle
+
+	err :=
+		r.db.
+			WithContext(ctx).
+			Where(
+				"id = ? AND customer_id = ?",
+				id,
+				customerID,
+			).
+			First(&v).
+			Error
+
+	return &v, err
+}
+
+func (r *VehicleRepository) FindByVIN(
+	ctx context.Context,
+	vin string,
+) (*vehicle.Vehicle, error) {
+
+	var v vehicle.Vehicle
+
+	err :=
+		r.db.
+			WithContext(ctx).
+			Where(
+				"vin = ?",
+				vin,
+			).
+			First(&v).
+			Error
+
+	return &v, err
+}

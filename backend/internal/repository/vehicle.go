@@ -45,4 +45,15 @@ type VehicleRepository interface {
 		ctx context.Context,
 		customerID uuid.UUID,
 	) error
+
+	FindByVIN(
+		ctx context.Context,
+		vin string,
+	) (*vehicle.Vehicle, error)
+
+	GetCustomerVehicle(
+		ctx context.Context,
+		id uuid.UUID,
+		customerID uuid.UUID,
+	) (*vehicle.Vehicle, error)
 }
