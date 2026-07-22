@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type Customer struct {
@@ -32,4 +33,17 @@ type Customer struct {
 	CreatedAt time.Time
 
 	UpdatedAt time.Time
+}
+
+func (Customer) TableName() string {
+	return "customer_profiles"
+}
+
+func (c *Customer) BeforeCreate(tx *gorm.DB) error {
+
+	if c.ID == uuid.Nil {
+		c.ID = uuid.New()
+	}
+
+	return nil
 }

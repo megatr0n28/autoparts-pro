@@ -8,26 +8,30 @@ import (
 
 	"github.com/megatr0n28/autoparts-pro/backend/internal/repository"
 
+	"github.com/megatr0n28/autoparts-pro/backend/internal/domain/customer"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/security"
 )
 
 type Service struct {
 	users repository.UserRepository
 
-	jwt     *JWTManager
-	refresh *RefreshTokenService
+	jwt       *JWTManager
+	refresh   *RefreshTokenService
+	customers repository.CustomerRepository
 }
 
 func NewService(
 	users repository.UserRepository,
 	jwt *JWTManager,
 	refresh *RefreshTokenService,
+	customers repository.CustomerRepository,
 ) *Service {
 
 	return &Service{
-		users:   users,
-		jwt:     jwt,
-		refresh: refresh,
+		users:     users,
+		jwt:       jwt,
+		refresh:   refresh,
+		customers: customers,
 	}
 
 }
@@ -53,9 +57,33 @@ func (s *Service) Register(
 		u.Role = "user"
 	}
 
-	return s.users.Create(
+	err =
+		s.users.Create(
+			ctx,
+			u,
+		)
+
+	if err != nil {
+
+		return err
+
+	}
+
+	profile :=
+		&customer.Customer{
+
+			UserID: u.ID,
+
+			FirstName: u.FirstName,
+
+			LastName: u.LastName,
+
+			Country: "USA",
+		}
+
+	return s.customers.Create(
 		ctx,
-		u,
+		profile,
 	)
 
 }

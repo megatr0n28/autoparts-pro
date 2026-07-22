@@ -69,6 +69,7 @@ func New() (*Application, error) {
 			repositories.User,
 			jwtManager,
 			refreshService,
+			repositories.Customer,
 		)
 
 	authHandler := handler.NewAuthHandler(
