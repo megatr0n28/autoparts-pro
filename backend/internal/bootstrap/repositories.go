@@ -12,6 +12,7 @@ type Repositories struct {
 	User          repository.UserRepository
 	RefreshTokens repository.RefreshTokenRepository
 	Customer      repository.CustomerRepository
+	Vehicle       repository.VehicleRepository
 }
 
 func NewRepositories(
@@ -24,6 +25,7 @@ func NewRepositories(
 		User:          repository.NewUserRepository(db),
 		RefreshTokens: postgresRepo.NewRefreshTokenRepository(db),
 		Customer:      postgresRepo.NewCustomerRepository(db),
+		Vehicle:       postgresRepo.NewVehicleRepository(db),
 	}
 
 }

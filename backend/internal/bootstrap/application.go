@@ -9,14 +9,16 @@ import (
 	"github.com/megatr0n28/autoparts-pro/backend/internal/logger"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/router"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/service"
+	"github.com/megatr0n28/autoparts-pro/backend/internal/service/vehicle"
 	"go.uber.org/zap"
 )
 
 type Application struct {
-	Config       *config.Config
-	Logger       *zap.Logger
-	Repositories *Repositories
-	Router       *gin.Engine
+	Config         *config.Config
+	Logger         *zap.Logger
+	Repositories   *Repositories
+	Router         *gin.Engine
+	vehicleHandler *handler.VehicleHandler
 }
 
 func New() (*Application, error) {
@@ -41,6 +43,16 @@ func New() (*Application, error) {
 	}
 
 	repositories := NewRepositories(db)
+
+	vehicleService :=
+		vehicle.NewService(
+			repositories.Vehicle,
+		)
+
+	vehicleHandler :=
+		handler.NewVehicleHandler(
+			vehicleService,
+		)
 
 	customerService :=
 		service.NewCustomerService(
@@ -83,13 +95,15 @@ func New() (*Application, error) {
 		userHandler,
 		authHandler,
 		customerHandler,
+		vehicleHandler,
 	)
 
 	app := &Application{
-		Config:       cfg,
-		Logger:       log,
-		Repositories: repositories,
-		Router:       appRouter,
+		Config:         cfg,
+		Logger:         log,
+		Repositories:   repositories,
+		Router:         appRouter,
+		vehicleHandler: vehicleHandler,
 	}
 
 	return app, nil

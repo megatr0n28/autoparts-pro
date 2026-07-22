@@ -12,6 +12,7 @@ func New(
 	userHandler *handler.UserHandler,
 	authHandler *handler.AuthHandler,
 	customerHandler *handler.CustomerHandler,
+	vehicleHandler *handler.VehicleHandler,
 ) *gin.Engine {
 
 	gin.SetMode(gin.ReleaseMode)
@@ -57,6 +58,17 @@ func New(
 	protected.GET(
 		"/users/me",
 		userHandler.Me,
+	)
+
+	vehicles := protected.Group("/vehicles")
+	vehicles.GET(
+		"",
+		vehicleHandler.List,
+	)
+
+	vehicles.POST(
+		"",
+		vehicleHandler.Create,
 	)
 
 	protected.GET(
