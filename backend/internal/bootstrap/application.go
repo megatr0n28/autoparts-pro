@@ -10,7 +10,7 @@ import (
 	"github.com/megatr0n28/autoparts-pro/backend/internal/provider/mock"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/router"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/service"
-	searchService "github.com/megatr0n28/autoparts-pro/backend/internal/service/search"
+	"github.com/megatr0n28/autoparts-pro/backend/internal/service/search"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/service/vehicle"
 	"go.uber.org/zap"
 )
@@ -73,7 +73,8 @@ func New() (*Application, error) {
 		mock.New()
 
 	searchSvc :=
-		searchService.New(
+		search.New(
+			log,
 			mockProvider,
 		)
 

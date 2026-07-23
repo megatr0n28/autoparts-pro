@@ -2,72 +2,147 @@ package mock
 
 import (
 	"context"
+	"strings"
 
 	"github.com/google/uuid"
 
-	"github.com/megatr0n28/autoparts-pro/backend/internal/dto"
+	"github.com/megatr0n28/autoparts-pro/backend/internal/provider"
 )
 
-type Provider struct{}
+type MockProvider struct{}
 
-func New() *Provider {
-	return &Provider{}
+func New() *MockProvider {
+	return &MockProvider{}
 }
 
-func (p *Provider) Name() string {
-	return "Mock"
+// Name returns the provider name.
+func (m *MockProvider) Name() string {
+	return "Mock Provider"
 }
 
-func (p *Provider) Search(
+// Search returns mock search results.
+// Later this implementation will be replaced by
+// AutoZone, NAPA, Advance Auto, etc.
+func (m *MockProvider) Search(
 	ctx context.Context,
 	vehicleID uuid.UUID,
 	query string,
-) ([]dto.PartSearchResponse, error) {
+) ([]provider.Part, error) {
 
-	return []dto.PartSearchResponse{
+	// Honor context cancellation.
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
 
-		{
-			Retailer: "AutoZone",
+	query = strings.TrimSpace(strings.ToLower(query))
 
-			Brand: "FRAM",
+	// Example responses based on the search query.
+	switch query {
 
-			PartNumber: "PH7317",
+	case "oil filter", "filter", "oil":
 
-			Name: "Engine Oil Filter",
+		return []provider.Part{
+			{
+				Retailer:    "AutoZone",
+				Brand:       "FRAM",
+				PartNumber:  "PH7317",
+				Name:        "Engine Oil Filter",
+				Description: "FRAM Extra Guard Spin-On Oil Filter",
+				Price:       8.99,
+				Currency:    "USD",
+				InStock:     true,
+				ProductURL:  "https://example.com/autozone/ph7317",
+				ImageURL:    "",
+			},
+			{
+				Retailer:    "Advance Auto",
+				Brand:       "Mobil 1",
+				PartNumber:  "M1-110A",
+				Name:        "Extended Performance Oil Filter",
+				Description: "Mobil 1 Extended Performance Filter",
+				Price:       11.49,
+				Currency:    "USD",
+				InStock:     true,
+				ProductURL:  "https://example.com/advance/m1-110a",
+				ImageURL:    "",
+			},
+			{
+				Retailer:    "NAPA",
+				Brand:       "NAPA Gold",
+				PartNumber:  "1348",
+				Name:        "NAPA Gold Oil Filter",
+				Description: "Premium engine oil filter",
+				Price:       10.79,
+				Currency:    "USD",
+				InStock:     true,
+				ProductURL:  "https://example.com/napa/1348",
+				ImageURL:    "",
+			},
+		}, nil
 
-			Description: "Premium oil filter",
+	case "brake pads", "pads", "brake":
 
-			Price: 8.99,
+		return []provider.Part{
+			{
+				Retailer:    "AutoZone",
+				Brand:       "Duralast",
+				PartNumber:  "MKD905",
+				Name:        "Ceramic Brake Pads",
+				Description: "Front ceramic brake pad set",
+				Price:       39.99,
+				Currency:    "USD",
+				InStock:     true,
+				ProductURL:  "https://example.com/autozone/mkd905",
+				ImageURL:    "",
+			},
+			{
+				Retailer:    "Advance Auto",
+				Brand:       "Carquest",
+				PartNumber:  "CQ905",
+				Name:        "Premium Ceramic Brake Pads",
+				Description: "Front premium ceramic brake pads",
+				Price:       42.49,
+				Currency:    "USD",
+				InStock:     true,
+				ProductURL:  "https://example.com/advance/cq905",
+				ImageURL:    "",
+			},
+		}, nil
 
-			Currency: "USD",
+	case "battery":
 
-			InStock: true,
+		return []provider.Part{
+			{
+				Retailer:    "AutoZone",
+				Brand:       "Duralast Gold",
+				PartNumber:  "H6-DLG",
+				Name:        "Automotive Battery",
+				Description: "650 CCA automotive battery",
+				Price:       189.99,
+				Currency:    "USD",
+				InStock:     true,
+				ProductURL:  "https://example.com/autozone/h6-dlg",
+				ImageURL:    "",
+			},
+			{
+				Retailer:    "NAPA",
+				Brand:       "Legend Premium",
+				PartNumber:  "BAT-7565",
+				Name:        "Premium Battery",
+				Description: "700 CCA maintenance-free battery",
+				Price:       199.99,
+				Currency:    "USD",
+				InStock:     true,
+				ProductURL:  "https://example.com/napa/bat7565",
+				ImageURL:    "",
+			},
+		}, nil
 
-			ProductURL: "https://example.com",
+	default:
 
-			ImageURL: "https://example.com/filter.jpg",
-		},
-
-		{
-			Retailer: "Advance Auto",
-
-			Brand: "Mobil 1",
-
-			PartNumber: "M1-110A",
-
-			Name: "Extended Performance Filter",
-
-			Description: "Synthetic oil filter",
-
-			Price: 11.49,
-
-			Currency: "USD",
-
-			InStock: true,
-
-			ProductURL: "https://example.com",
-
-			ImageURL: "https://example.com/filter2.jpg",
-		},
-	}, nil
+		// Unknown search returns no results.
+		return []provider.Part{}, nil
+	}
 }

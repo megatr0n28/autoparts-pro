@@ -4,16 +4,22 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-
-	"github.com/megatr0n28/autoparts-pro/backend/internal/dto"
 )
 
+// Provider represents a searchable auto parts retailer.
+//
+// Every retailer implementation (Mock, AutoZone,
+// NAPA, Advance Auto, O'Reilly, etc.) must satisfy
+// this interface.
 type Provider interface {
+
+	// Name returns the retailer name.
 	Name() string
 
+	// Search searches the retailer catalog.
 	Search(
 		ctx context.Context,
 		vehicleID uuid.UUID,
 		query string,
-	) ([]dto.PartSearchResponse, error)
+	) ([]Part, error)
 }
