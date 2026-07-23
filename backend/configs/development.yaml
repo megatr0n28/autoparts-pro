@@ -18,7 +18,7 @@ database:
 
   max_open_conns: 100
 
-  max_lifetime: 30
+  max_lifetime: 30m
 
 redis:
   host: localhost

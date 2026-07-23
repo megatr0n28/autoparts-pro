@@ -1,0 +1,13 @@
+.git
+.gitignore
+
+tmp
+logs
+
+*.md
+
+.env
+
+bin
+
+coverage

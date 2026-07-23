@@ -30,8 +30,10 @@ docker-down:
 
 
 docker-reset:
-	docker-compose down -v
+	docker-compose down -v --remove-orphans
 
+docker-smoke:
+	./scripts/docker-smoke-test.sh
 
 docker-logs:
 	docker-compose logs -f
