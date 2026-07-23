@@ -49,40 +49,9 @@ func New() (*Application, error) {
 
 	customerRepository := repositories.Customer
 
-	vehicleService :=
-		vehicle.NewService(
-			repositories.Vehicle,
-		)
-
-	vehicleHandler :=
-		handler.NewVehicleHandler(
-			vehicleService,
-		)
-
-	customerService :=
-		service.NewCustomerService(
-			repositories.Customer,
-		)
-
-	customerHandler :=
-		handler.NewCustomerHandler(
-			customerService,
-		)
-
-	mockProvider :=
-		mock.New()
-
-	searchSvc :=
-		search.New(
-			log,
-			mockProvider,
-		)
-
-	searchHandler :=
-		handler.NewSearchHandler(
-			searchSvc,
-		)
-
+	// ----------------------------
+	// Authentication
+	// ----------------------------
 	jwtManager := auth.NewJWTManager(
 		cfg.JWT.Secret,
 		cfg.JWT.Expiration,
@@ -107,8 +76,57 @@ func New() (*Application, error) {
 		authService,
 	)
 
+	// ----------------------------
+	// Customer Service
+	// ----------------------------
+	customerService :=
+		service.NewCustomerService(
+			repositories.Customer,
+		)
+
+	customerHandler :=
+		handler.NewCustomerHandler(
+			customerService,
+		)
+
+	// ----------------------------
+	// Vehicles
+	// ----------------------------
+	vehicleService :=
+		vehicle.NewService(
+			repositories.Vehicle,
+		)
+
+	vehicleHandler :=
+		handler.NewVehicleHandler(
+			vehicleService,
+		)
+
+	// ----------------------------
+	// Search Providers
+	// ----------------------------
+	mockProvider :=
+		mock.New()
+
+	searchSvc :=
+		search.New(
+			log,
+			mockProvider,
+		)
+
+	searchHandler :=
+		handler.NewSearchHandler(
+			searchSvc,
+		)
+
+	// ----------------------------
+	// Users
+	// ----------------------------
 	userHandler := handler.NewUserHandler()
 
+	// ----------------------------
+	// Router
+	// ----------------------------
 	appRouter := router.New(
 		jwtManager,
 		userHandler,

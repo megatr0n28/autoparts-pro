@@ -2,12 +2,14 @@ package search
 
 import (
 	"context"
+	"errors"
 	"sort"
-	"sync"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/megatr0n28/autoparts-pro/backend/internal/dto"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/provider"
@@ -37,90 +39,181 @@ func (s *Service) Search(
 
 	start := time.Now()
 
-	ctx, cancel := context.WithTimeout(
-		ctx,
-		5*time.Second,
-	)
+	query =
+		strings.TrimSpace(
+			query,
+		)
+
+	if query == "" {
+
+		return nil,
+			errors.New(
+				"search query required",
+			)
+	}
+
+	if vehicleID == uuid.Nil {
+
+		return nil,
+			errors.New(
+				"invalid vehicle id",
+			)
+	}
+
+	ctx, cancel :=
+		context.WithTimeout(
+			ctx,
+			5*time.Second,
+		)
+
 	defer cancel()
 
 	var (
-		wg      sync.WaitGroup
-		mutex   sync.Mutex
 		results []dto.PartSearchResponse
+
+		mutex = make(chan struct{}, 1)
 	)
+
+	group, ctx :=
+		errgroup.WithContext(
+			ctx,
+		)
 
 	for _, p := range s.providers {
 
-		wg.Add(1)
+		if p == nil {
+			continue
+		}
 
-		go func(provider provider.Provider) {
+		provider := p
 
-			defer wg.Done()
+		group.Go(func() error {
 
-			providerStart := time.Now()
+			providerStart :=
+				time.Now()
 
-			items, err := provider.Search(
-				ctx,
-				vehicleID,
-				query,
-			)
+			select {
+
+			case <-ctx.Done():
+
+				return ctx.Err()
+
+			default:
+
+			}
+
+			parts, err :=
+				provider.Search(
+					ctx,
+					vehicleID,
+					query,
+				)
 
 			if err != nil {
 
 				s.logger.Warn(
 					"provider search failed",
-					zap.String("provider", provider.Name()),
-					zap.String("query", query),
-					zap.Error(err),
+					zap.String(
+						"provider",
+						provider.Name(),
+					),
+					zap.String(
+						"query",
+						query,
+					),
+					zap.Error(
+						err,
+					),
 				)
 
-				return
+				return nil
 			}
-
-			s.logger.Debug(
-				"provider search completed",
-				zap.String("provider", provider.Name()),
-				zap.String("query", query),
-				zap.Int("results", len(items)),
-				zap.Duration("duration", time.Since(providerStart)),
-			)
 
 			mapped :=
 				mapProviderParts(
-					items,
+					parts,
 				)
 
-			mutex.Lock()
+			mutex <- struct{}{}
 
-			results = append(
-				results,
-				mapped...,
+			results =
+				append(
+					results,
+					mapped...,
+				)
+
+			<-mutex
+
+			s.logger.Debug(
+				"provider search completed",
+				zap.String(
+					"provider",
+					provider.Name(),
+				),
+				zap.Int(
+					"results",
+					len(mapped),
+				),
+				zap.Duration(
+					"duration",
+					time.Since(
+						providerStart,
+					),
+				),
 			)
 
-			mutex.Unlock()
-
-		}(p)
-
+			return nil
+		})
 	}
 
-	wg.Wait()
+	if err := group.Wait(); err != nil {
 
-	results = dedupe(results)
+		return nil, err
+	}
 
-	sort.Slice(
+	results =
+		dedupe(
+			results,
+		)
+
+	sort.SliceStable(
 		results,
 		func(i, j int) bool {
-			return results[i].Price < results[j].Price
+
+			if results[i].Price ==
+				results[j].Price {
+
+				return results[i].PartNumber <
+					results[j].PartNumber
+			}
+
+			return results[i].Price <
+				results[j].Price
 		},
 	)
 
 	s.logger.Info(
 		"parts search completed",
-		zap.String("query", query),
-		zap.String("vehicle_id", vehicleID.String()),
-		zap.Int("providers", len(s.providers)),
-		zap.Int("results", len(results)),
-		zap.Duration("duration", time.Since(start)),
+		zap.String(
+			"query",
+			query,
+		),
+		zap.String(
+			"vehicle_id",
+			vehicleID.String(),
+		),
+		zap.Int(
+			"providers",
+			len(s.providers),
+		),
+		zap.Int(
+			"results",
+			len(results),
+		),
+		zap.Duration(
+			"duration",
+			time.Since(start),
+		),
 	)
 
 	return results, nil
