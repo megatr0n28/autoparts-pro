@@ -6,38 +6,49 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/megatr0n28/autoparts-pro/backend/internal/dto"
-	searchService "github.com/megatr0n28/autoparts-pro/backend/internal/service/search"
+	"github.com/megatr0n28/autoparts-pro/backend/internal/service/search"
 )
 
 type SearchHandler struct {
-	service *searchService.Service
+	service *search.Service
 }
 
 func NewSearchHandler(
-	s *searchService.Service,
+	service *search.Service,
 ) *SearchHandler {
 
 	return &SearchHandler{
-		service: s,
+		service: service,
 	}
 }
 
-func (h *SearchHandler) Search(
+// SearchParts
+//
+// GET /api/v1/search/parts
+//
+// Query params:
+// vehicle_id
+// query
+func (h *SearchHandler) SearchParts(
 	c *gin.Context,
 ) {
 
-	var request dto.PartSearchRequest
+	vehicleIDParam :=
+		c.Query(
+			"vehicle_id",
+		)
 
-	if err :=
-		c.ShouldBindQuery(
-			&request,
-		); err != nil {
+	query :=
+		c.Query(
+			"query",
+		)
+
+	if vehicleIDParam == "" {
 
 		c.JSON(
 			http.StatusBadRequest,
 			gin.H{
-				"error": err.Error(),
+				"error": "vehicle_id required",
 			},
 		)
 
@@ -46,13 +57,13 @@ func (h *SearchHandler) Search(
 
 	vehicleID, err :=
 		uuid.Parse(
-			request.VehicleID,
+			vehicleIDParam,
 		)
 
 	if err != nil {
 
 		c.JSON(
-			400,
+			http.StatusBadRequest,
 			gin.H{
 				"error": "invalid vehicle id",
 			},
@@ -61,17 +72,29 @@ func (h *SearchHandler) Search(
 		return
 	}
 
+	if query == "" {
+
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{
+				"error": "search query required",
+			},
+		)
+
+		return
+	}
+
 	results, err :=
 		h.service.Search(
-			c,
+			c.Request.Context(),
 			vehicleID,
-			request.Query,
+			query,
 		)
 
 	if err != nil {
 
 		c.JSON(
-			500,
+			http.StatusInternalServerError,
 			gin.H{
 				"error": err.Error(),
 			},
@@ -81,7 +104,10 @@ func (h *SearchHandler) Search(
 	}
 
 	c.JSON(
-		200,
-		results,
+		http.StatusOK,
+		gin.H{
+			"results": results,
+		},
 	)
+
 }

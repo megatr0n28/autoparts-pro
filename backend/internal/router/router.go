@@ -18,12 +18,13 @@ func New(
 	searchHandler *handler.SearchHandler,
 ) *gin.Engine {
 
-	gin.SetMode(gin.ReleaseMode)
-	r :=
-		gin.Default()
+	router := gin.Default()
+	router.SetTrustedProxies(nil)
 
 	api :=
-		r.Group("/api/v1")
+		router.Group(
+			"/api/v1",
+		)
 
 	//
 	// Public authentication routes
@@ -31,13 +32,13 @@ func New(
 	authRoutes := api.Group("/auth")
 
 	authRoutes.POST(
-		"/login",
-		authHandler.Login,
+		"/register",
+		authHandler.Register,
 	)
 
 	authRoutes.POST(
-		"/register",
-		authHandler.Register,
+		"/login",
+		authHandler.Login,
 	)
 
 	authRoutes.POST(
@@ -48,6 +49,11 @@ func New(
 	authRoutes.POST(
 		"/logout",
 		authHandler.Logout,
+	)
+
+	authRoutes.POST(
+		"/logout-all",
+		authHandler.LogoutAll,
 	)
 
 	//
@@ -61,20 +67,40 @@ func New(
 		),
 	)
 
+	// ----------------------------
+	// User Routes
+	// -
 	protected.GET(
 		"/users/me",
 		userHandler.Me,
 	)
 
-	vehicles := protected.Group("/vehicles")
-	vehicles.GET(
-		"",
-		vehicleHandler.List,
+	// ----------------------------
+	// Customer Routes
+	// ----------------------------
+	protected.GET(
+		"/customers/me",
+		customerHandler.Me,
 	)
+
+	protected.PUT(
+		"/customers/me",
+		customerHandler.Update,
+	)
+
+	// ----------------------------
+	// Vehicle Routes
+	// ----------------------------
+	vehicles := protected.Group("/vehicles")
 
 	vehicles.POST(
 		"",
 		vehicleHandler.Create,
+	)
+
+	vehicles.GET(
+		"",
+		vehicleHandler.List,
 	)
 
 	vehicles.DELETE(
@@ -92,20 +118,16 @@ func New(
 		vehicleHandler.Update,
 	)
 
-	protected.GET(
-		"/customers/me",
-		customerHandler.Me,
-	)
-
-	protected.PUT(
-		"/customers/me",
-		customerHandler.Update,
-	)
-
-	protected.POST(
-		"/auth/logout-all",
-		authHandler.LogoutAll,
-	)
+	// ----------------------------
+	// Parts Search Routes
+	// ----------------------------
+	parts := protected.Group("/parts")
+	{
+		parts.GET(
+			"/search",
+			searchHandler.SearchParts,
+		)
+	}
 
 	//
 	// Admin routes
@@ -140,8 +162,11 @@ func New(
 		},
 	)
 
+	//
+	// Health check route
+	//
 	api.GET(
-		"health",
+		"/health",
 		func(c *gin.Context) {
 
 			c.JSON(
@@ -154,13 +179,5 @@ func New(
 		},
 	)
 
-	parts := protected.Group("/parts")
-	{
-		parts.GET(
-			"/search",
-			searchHandler.Search,
-		)
-	}
-
-	return r
+	return router
 }
