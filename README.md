@@ -1,4 +1,398 @@
-# autoparts-pro
+# Autoparts-Pro
+# Running AutoParts Pro with Docker
+
+## Prerequisites
+
+Before running AutoParts Pro with Docker, ensure you have:
+
+* Docker Desktop installed
+* Docker Compose v2 installed
+* Go 1.25+ installed (for local development)
+
+Verify Docker:
+
+```bash
+docker --version
+
+docker-compose version
+```
+
+---
+
+# Docker Architecture
+
+The Docker environment runs:
+
+| Service           | Container            | Port   | Purpose                 |
+| ----------------- | -------------------- | ------ | ----------------------- |
+| AutoParts Pro API | `autoparts-api`      | `8080` | Go Gin REST API         |
+| PostgreSQL        | `autoparts-postgres` | `5432` | Application database    |
+| Redis             | `autoparts-redis`    | `6379` | Cache / session storage |
+
+The services communicate using the Docker network:
+
+```
+autoparts-network
+```
+
+---
+
+# Start the Application
+
+From the project root:
+
+```bash
+docker-compose up --build
+```
+
+The first build will:
+
+1. Download Go dependencies
+2. Build the Go API binary
+3. Copy application configuration
+4. Copy database migrations
+5. Start PostgreSQL
+6. Start Redis
+7. Run database migrations
+8. Start the API server
+
+Expected API startup:
+
+```
+Loaded configuration: development
+AutoParts Pro API started
+Listening and serving HTTP on :8080
+```
+
+---
+
+# Run in Background
+
+To start containers detached:
+
+```bash
+docker-compose up -d --build
+```
+
+View logs:
+
+```bash
+docker-compose logs -f api
+```
+
+---
+
+# Verify Container Health
+
+Check running containers:
+
+```bash
+docker ps
+```
+
+Expected:
+
+```
+NAME                  STATUS
+
+autoparts-postgres    Up (healthy)
+
+autoparts-redis       Up (healthy)
+
+autoparts-api         Up (healthy)
+```
+
+---
+
+# API Health Check
+
+Verify the API:
+
+```bash
+curl http://localhost:8080/api/v1/health
+```
+
+Expected response:
+
+```json
+{
+  "status": "ok"
+}
+```
+
+---
+
+# Docker Smoke Test
+
+AutoParts Pro includes a Docker smoke test.
+
+Run:
+
+```bash
+./backend/scripts/docker-smoke-test.sh
+```
+
+Expected:
+
+```
+Checking API health...
+
+API healthy
+
+{"status":"ok"}
+
+Docker smoke test passed
+```
+
+---
+
+# Stop the Application
+
+Stop containers:
+
+```bash
+docker-compose down
+```
+
+Remove containers and volumes:
+
+```bash
+docker-compose down -v
+```
+
+**Warning:** Removing volumes deletes the PostgreSQL database data.
+
+---
+
+# Rebuild After Code Changes
+
+Rebuild the API image:
+
+```bash
+docker-compose build api
+```
+
+Restart:
+
+```bash
+docker-compose up
+```
+
+For a clean rebuild:
+
+```bash
+docker-compose build --no-cache
+docker-compose up
+```
+
+---
+
+# Environment Configuration
+
+The API loads configuration from:
+
+```
+backend/configs/development.yaml
+```
+
+Docker overrides configuration values using environment variables.
+
+Example:
+
+```yaml
+database:
+  host: postgres
+```
+
+Docker override:
+
+```yaml
+DATABASE_HOST=postgres
+```
+
+Important Docker networking rules:
+
+| Component  | Docker Hostname |
+| ---------- | --------------- |
+| PostgreSQL | `postgres`      |
+| Redis      | `redis`         |
+| API        | `api`           |
+
+Do not use `localhost` between containers.
+
+---
+
+# Database Access
+
+Connect to PostgreSQL:
+
+```bash
+docker exec -it autoparts-postgres psql \
+-U postgres \
+-d autoparts
+```
+
+List tables:
+
+```sql
+\dt
+```
+
+Exit:
+
+```sql
+\q
+```
+
+---
+
+# Redis Access
+
+Connect:
+
+```bash
+docker exec -it autoparts-redis redis-cli
+```
+
+Test:
+
+```bash
+ping
+```
+
+Expected:
+
+```
+PONG
+```
+
+---
+
+# Running Tests
+
+Run Go tests locally:
+
+```bash
+cd backend
+
+go test ./...
+```
+
+Expected:
+
+```
+ok github.com/megatr0n28/autoparts-pro/backend/tests/smoke
+```
+
+---
+
+# Troubleshooting
+
+## API cannot connect to PostgreSQL
+
+Check:
+
+```bash
+docker-compose ps
+```
+
+PostgreSQL should show:
+
+```
+healthy
+```
+
+View logs:
+
+```bash
+docker-compose logs postgres
+```
+
+---
+
+## Migration Error
+
+Example:
+
+```
+failed to open source "file://migrations"
+```
+
+Verify the image contains migrations:
+
+```bash
+docker exec -it autoparts-api ls migrations
+```
+
+---
+
+## Configuration Error
+
+Example:
+
+```
+Config File "development" Not Found
+```
+
+Verify:
+
+```bash
+docker exec -it autoparts-api ls configs
+```
+
+Expected:
+
+```
+development.yaml
+production.yaml
+app.yaml
+```
+
+---
+
+# Development Workflow
+
+Recommended workflow:
+
+1. Make code changes
+2. Run tests:
+
+```bash
+go test ./...
+```
+
+3. Rebuild Docker:
+
+```bash
+docker-compose build api
+```
+
+4. Restart:
+
+```bash
+docker-compose up
+```
+
+5. Run smoke test:
+
+```bash
+./backend/scripts/docker-smoke-test.sh
+```
+
+---
+
+# Current Docker Support
+
+AutoParts Pro currently supports:
+
+* Go 1.25 Docker builds
+* PostgreSQL 17
+* Redis 7
+* Automated migrations
+* API health checks
+* Container health checks
+* Docker smoke testing
+
 
 # Troubleshooting Guide
 
