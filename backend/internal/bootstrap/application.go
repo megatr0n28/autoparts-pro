@@ -7,8 +7,10 @@ import (
 	"github.com/megatr0n28/autoparts-pro/backend/internal/database"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/handler"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/logger"
+	"github.com/megatr0n28/autoparts-pro/backend/internal/provider/mock"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/router"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/service"
+	searchService "github.com/megatr0n28/autoparts-pro/backend/internal/service/search"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/service/vehicle"
 	"go.uber.org/zap"
 )
@@ -19,6 +21,7 @@ type Application struct {
 	Repositories   *Repositories
 	Router         *gin.Engine
 	vehicleHandler *handler.VehicleHandler
+	searchHandler  *handler.SearchHandler
 }
 
 func New() (*Application, error) {
@@ -66,6 +69,19 @@ func New() (*Application, error) {
 			customerService,
 		)
 
+	mockProvider :=
+		mock.New()
+
+	searchSvc :=
+		searchService.New(
+			mockProvider,
+		)
+
+	searchHandler :=
+		handler.NewSearchHandler(
+			searchSvc,
+		)
+
 	jwtManager := auth.NewJWTManager(
 		cfg.JWT.Secret,
 		cfg.JWT.Expiration,
@@ -99,6 +115,7 @@ func New() (*Application, error) {
 		customerHandler,
 		vehicleHandler,
 		customerRepository,
+		searchHandler,
 	)
 
 	app := &Application{
@@ -107,6 +124,7 @@ func New() (*Application, error) {
 		Repositories:   repositories,
 		Router:         appRouter,
 		vehicleHandler: vehicleHandler,
+		searchHandler:  searchHandler,
 	}
 
 	return app, nil

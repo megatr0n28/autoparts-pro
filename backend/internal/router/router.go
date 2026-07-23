@@ -15,6 +15,7 @@ func New(
 	customerHandler *handler.CustomerHandler,
 	vehicleHandler *handler.VehicleHandler,
 	customerRepository repository.CustomerRepository,
+	searchHandler *handler.SearchHandler,
 ) *gin.Engine {
 
 	gin.SetMode(gin.ReleaseMode)
@@ -152,6 +153,14 @@ func New(
 
 		},
 	)
+
+	parts := protected.Group("/parts")
+	{
+		parts.GET(
+			"/search",
+			searchHandler.Search,
+		)
+	}
 
 	return r
 }
