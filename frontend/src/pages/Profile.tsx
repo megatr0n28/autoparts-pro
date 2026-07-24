@@ -6,7 +6,7 @@ import {
 import api from "../api/client";
 
 
-interface UserProfile {
+interface Profile {
 
   user_id: string;
 
@@ -20,7 +20,7 @@ export default function Profile() {
 
 
   const [profile, setProfile] =
-    useState<UserProfile | null>(
+    useState<Profile | null>(
       null
     );
 
@@ -32,9 +32,12 @@ export default function Profile() {
 
   useEffect(() => {
 
-    async function loadProfile() {
+
+    async function load() {
+
 
       try {
+
 
         const response =
           await api.get(
@@ -49,16 +52,19 @@ export default function Profile() {
 
       } catch {
 
+
         setError(
           "Unable to load profile"
         );
 
+
       }
+
 
     }
 
 
-    loadProfile();
+    load();
 
 
   }, []);
@@ -67,13 +73,7 @@ export default function Profile() {
 
   if (error) {
 
-    return (
-
-      <p>
-        {error}
-      </p>
-
-    );
+    return <p>{error}</p>;
 
   }
 
@@ -81,13 +81,7 @@ export default function Profile() {
 
   if (!profile) {
 
-    return (
-
-      <p>
-        Loading profile...
-      </p>
-
-    );
+    return <p>Loading...</p>;
 
   }
 

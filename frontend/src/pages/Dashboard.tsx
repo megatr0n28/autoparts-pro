@@ -1,21 +1,80 @@
-export default function Dashboard(){
+import {
+  useEffect,
+  useState,
+} from "react";
 
-return (
-
-<div>
-
-<h1>
-Dashboard
-</h1>
+import api from "../api/client";
 
 
-<p>
-Welcome to AutoParts Pro
-</p>
+interface HealthResponse {
+
+  status: string;
+
+}
 
 
-</div>
 
-);
+export default function Dashboard() {
+
+
+  const [health, setHealth] =
+    useState<HealthResponse | null>(
+      null
+    );
+
+
+  useEffect(() => {
+
+
+    async function loadHealth() {
+
+      const response =
+        await api.get(
+          "/health"
+        );
+
+
+      setHealth(
+        response.data
+      );
+
+    }
+
+
+    loadHealth();
+
+
+  }, []);
+
+
+
+  return (
+
+    <div>
+
+      <h1>
+        Dashboard
+      </h1>
+
+
+      <p>
+        AutoParts Pro API Status
+      </p>
+
+
+      <strong>
+
+        {
+          health
+            ? health.status
+            : "Checking..."
+        }
+
+      </strong>
+
+
+    </div>
+
+  );
 
 }
