@@ -1,32 +1,17 @@
-import {
-useAuth,
-} from "../auth/AuthContext";
-
-
 export default function Dashboard(){
-
-const {
-logout,
-}=useAuth();
-
 
 return (
 
 <div>
 
 <h1>
-AutoParts Pro Dashboard
+Dashboard
 </h1>
 
 
 <p>
-Authenticated user
+Welcome to AutoParts Pro
 </p>
-
-
-<button onClick={logout}>
-Logout
-</button>
 
 
 </div>

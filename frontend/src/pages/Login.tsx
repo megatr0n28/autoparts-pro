@@ -2,6 +2,10 @@ import {
   useState,
 } from "react";
 
+import type {
+  FormEvent,
+} from "react";
+
 import {
   useNavigate,
 } from "react-router-dom";
@@ -22,16 +26,16 @@ export default function Login() {
     useNavigate();
 
 
-  const [email,setEmail] =
+  const [email, setEmail] =
     useState("");
 
-  const [password,setPassword] =
+  const [password, setPassword] =
     useState("");
 
 
   async function submit(
-    e: React.FormEvent
-  ){
+    e: FormEvent
+  ) {
 
     e.preventDefault();
 
@@ -42,7 +46,7 @@ export default function Login() {
     );
 
 
-    navigate("/dashboard");
+    navigate("/");
 
   }
 
@@ -60,10 +64,7 @@ export default function Login() {
         placeholder="Email"
         value={email}
         onChange={
-          e =>
-            setEmail(
-              e.target.value
-            )
+          e => setEmail(e.target.value)
         }
       />
 
@@ -73,15 +74,12 @@ export default function Login() {
         placeholder="Password"
         value={password}
         onChange={
-          e =>
-            setPassword(
-              e.target.value
-            )
+          e => setPassword(e.target.value)
         }
       />
 
 
-      <button>
+      <button type="submit">
         Login
       </button>
 

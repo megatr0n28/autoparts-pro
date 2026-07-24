@@ -1,59 +1,228 @@
-import { useState } from "react";
-import type { FormEvent } from "react";
+import {
+  useState,
+} from "react";
 
-import { useAuth } from "../auth/AuthContext";
+import type {
+  FormEvent,
+} from "react";
+
+import {
+  useNavigate,
+} from "react-router-dom";
+
+import {
+  useAuth,
+} from "../auth/AuthContext";
+
+import type {
+  AxiosError,
+} from "axios";
+
 
 export default function Register() {
-  const { register } = useAuth();
 
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const {
+    register,
+  } = useAuth();
 
-  async function submit(e: FormEvent) {
+
+  const navigate =
+    useNavigate();
+
+
+  const [firstName, setFirstName] =
+    useState("");
+
+  const [lastName, setLastName] =
+    useState("");
+
+  const [email, setEmail] =
+    useState("");
+
+  const [password, setPassword] =
+    useState("");
+
+
+  const [error, setError] =
+    useState("");
+
+
+  const [loading, setLoading] =
+    useState(false);
+
+
+  async function submit(
+    e: FormEvent
+  ) {
+
     e.preventDefault();
 
-    await register({
-      first_name: firstName,
-      last_name: lastName,
-      email,
-      password,
-    });
+    setError("");
 
-    alert("Registration successful");
+    setLoading(true);
+
+
+    try {
+
+      await register({
+        first_name: firstName,
+        last_name: lastName,
+        email,
+        password,
+      });
+
+
+      navigate("/login");
+
+
+    } catch (err) {
+
+      const error =
+        err as AxiosError<{
+          error?: string;
+        }>;
+
+
+      setError(
+        error.response?.data?.error ??
+        "Registration failed"
+      );
+
+    } finally {
+
+      setLoading(false);
+
+    }
+
   }
 
+
   return (
-    <form onSubmit={submit}>
-      <h1>Register</h1>
 
-      <input
-        placeholder="First Name"
-        value={firstName}
-        onChange={(e) => setFirstName(e.target.value)}
-      />
+    <div>
 
-      <input
-        placeholder="Last Name"
-        value={lastName}
-        onChange={(e) => setLastName(e.target.value)}
-      />
+      <h1>
+        Create Account
+      </h1>
 
-      <input
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
 
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
+      <form
+        onSubmit={submit}
+      >
 
-      <button type="submit">Register</button>
-    </form>
+
+        <div>
+
+          <input
+            type="text"
+            placeholder="First Name"
+            value={firstName}
+            onChange={
+              e => setFirstName(
+                e.target.value
+              )
+            }
+            required
+          />
+
+        </div>
+
+
+        <div>
+
+          <input
+            type="text"
+            placeholder="Last Name"
+            value={lastName}
+            onChange={
+              e => setLastName(
+                e.target.value
+              )
+            }
+            required
+          />
+
+        </div>
+
+
+        <div>
+
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={
+              e => setEmail(
+                e.target.value
+              )
+            }
+            required
+          />
+
+        </div>
+
+
+        <div>
+
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={
+              e => setPassword(
+                e.target.value
+              )
+            }
+            required
+            minLength={8}
+          />
+
+        </div>
+
+
+        {
+          error && (
+
+            <p>
+              {error}
+            </p>
+
+          )
+        }
+
+
+        <button
+          type="submit"
+          disabled={loading}
+        >
+
+          {
+            loading
+              ? "Creating..."
+              : "Register"
+          }
+
+        </button>
+
+
+      </form>
+
+
+      <p>
+
+        Already have an account?
+
+        <button
+          type="button"
+          onClick={() => navigate("/login")}
+        >
+          Login
+        </button>
+
+      </p>
+
+
+    </div>
+
   );
 }
