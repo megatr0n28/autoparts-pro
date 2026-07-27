@@ -4,7 +4,12 @@ import {
 
 import {
   provideHttpClient,
+  withInterceptors,
 } from '@angular/common/http';
+
+import {
+  authInterceptor,
+} from './app/core/interceptors/auth.interceptor';
 
 import {
   provideRouter,
@@ -26,7 +31,11 @@ bootstrapApplication(
         routes,
       ),
 
-      provideHttpClient(),
+      provideHttpClient(
+        withInterceptors([
+          authInterceptor
+        ])
+      ),
 
     ],
 

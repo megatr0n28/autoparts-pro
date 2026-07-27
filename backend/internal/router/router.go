@@ -27,22 +27,27 @@ func New(
 		cors.New(cors.Config{
 
 			AllowOrigins: []string{
-				"http://localhost:5173",
+				"http://localhost:4200",
 			},
 
 			AllowMethods: []string{
 				"GET",
 				"POST",
 				"PUT",
-				"PATCH",
 				"DELETE",
+				"OPTIONS",
 			},
 
 			AllowHeaders: []string{
-				"Authorization",
+				"Origin",
 				"Content-Type",
+				"Authorization",
 			},
 
+			ExposeHeaders: []string{
+
+				"Content-Length",
+			},
 			AllowCredentials: true,
 
 			MaxAge: 12 * time.Hour,

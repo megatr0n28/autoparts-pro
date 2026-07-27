@@ -12,6 +12,11 @@ import {
 
 
 import {
+  Router,
+} from '@angular/router';
+
+
+import {
   MatInputModule,
 } from '@angular/material/input';
 
@@ -24,6 +29,11 @@ import {
 import {
   MatCardModule,
 } from '@angular/material/card';
+
+
+import {
+  AuthService,
+} from '../../core/services/auth.service';
 
 
 
@@ -58,13 +68,26 @@ export class RegisterComponent {
   registerForm: FormGroup;
 
 
+  errorMessage = '';
+
+  successMessage = '';
+
+
+
   constructor(
+
     private fb: FormBuilder,
+
+    private authService: AuthService,
+
+    private router: Router,
+
   ) {
 
 
     this.registerForm =
       this.fb.group({
+
 
         firstName: [
 
@@ -129,7 +152,14 @@ export class RegisterComponent {
 
 
 
-  submit() {
+
+  submit(): void {
+
+
+    this.errorMessage = '';
+
+    this.successMessage = '';
+
 
 
     if (
@@ -141,10 +171,83 @@ export class RegisterComponent {
     }
 
 
-    console.log(
-      "Register submitted",
-      this.registerForm.value
-    );
+
+    const form =
+      this.registerForm.value;
+
+
+
+    const request = {
+
+
+      first_name:
+        form.firstName,
+
+
+      last_name:
+        form.lastName,
+
+
+      email:
+        form.email,
+
+
+      password:
+        form.password,
+
+
+    };
+
+
+
+    this.authService.register(
+      request
+    )
+
+    .subscribe({
+
+
+      next: () => {
+
+
+        this.successMessage =
+          "Registration successful. Redirecting to login...";
+
+
+
+        setTimeout(() => {
+
+
+          this.router.navigate([
+            '/login'
+          ]);
+
+
+        }, 1500);
+
+
+
+      },
+
+
+      error: (error) => {
+
+
+        console.error(
+          "Registration failed",
+          error
+        );
+
+
+        this.errorMessage =
+          error.error?.error ??
+          "Registration failed";
+
+
+      },
+
+
+    });
 
 
   }
