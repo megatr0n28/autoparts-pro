@@ -1,0 +1,95 @@
+<h2>
+  Vehicles
+</h2>
+
+
+<table
+mat-table
+[dataSource]="vehicles"
+class="mat-elevation-z2"
+>
+
+
+<ng-container matColumnDef="year">
+
+<th mat-header-cell *matHeaderCellDef>
+Year
+</th>
+
+<td mat-cell *matCellDef="let vehicle">
+{{vehicle.year}}
+</td>
+
+</ng-container>
+
+
+
+<ng-container matColumnDef="make">
+
+<th mat-header-cell *matHeaderCellDef>
+Make
+</th>
+
+<td mat-cell *matCellDef="let vehicle">
+{{vehicle.make}}
+</td>
+
+</ng-container>
+
+
+
+<ng-container matColumnDef="model">
+
+<th mat-header-cell *matHeaderCellDef>
+Model
+</th>
+
+<td mat-cell *matCellDef="let vehicle">
+{{vehicle.model}}
+</td>
+
+</ng-container>
+
+
+
+<ng-container matColumnDef="vin">
+
+<th mat-header-cell *matHeaderCellDef>
+VIN
+</th>
+
+<td mat-cell *matCellDef="let vehicle">
+{{vehicle.vin}}
+</td>
+
+</ng-container>
+
+
+
+<ng-container matColumnDef="license_plate">
+
+<th mat-header-cell *matHeaderCellDef>
+Plate
+</th>
+
+<td mat-cell *matCellDef="let vehicle">
+{{vehicle.license_plate}}
+</td>
+
+</ng-container>
+
+
+
+<tr
+mat-header-row
+*matHeaderRowDef="displayedColumns">
+</tr>
+
+
+<tr
+mat-row
+*matRowDef="let row; columns: displayedColumns;">
+</tr>
+
+
+</table>

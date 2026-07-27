@@ -14,6 +14,15 @@ import {
   authGuard,
 } from './core/guards/auth.guard';
 
+import {
+ VehicleListComponent
+} from './vehicles/vehicle-list/vehicle-list';
+
+
+import {
+ VehicleCreateComponent
+} from './vehicles/vehicle-create/vehicle-create';
+
 export const routes = [
 
 {
@@ -28,6 +37,22 @@ export const routes = [
 
   children: [
 
+    {
+
+    path:'vehicles',
+
+    component:
+    VehicleListComponent
+
+    },
+    {
+
+    path:'vehicles/create',
+
+    component:
+    VehicleCreateComponent
+
+    },
     {
 
       path: '',
