@@ -28,6 +28,30 @@ func (s *Service) Create(
 	v *vehicleDomain.Vehicle,
 ) error {
 
+	if v.VIN != "" {
+
+		v.VIN =
+			vehicleDomain.NormalizeVIN(
+				v.VIN,
+			)
+
+		found, err :=
+			s.repo.FindByVIN(
+				ctx,
+				v.VIN,
+			)
+
+		if err == nil &&
+			found != nil {
+
+			return fmt.Errorf(
+				"vehicle VIN already exists",
+			)
+
+		}
+
+	}
+
 	return s.repo.Create(
 		ctx,
 		v,

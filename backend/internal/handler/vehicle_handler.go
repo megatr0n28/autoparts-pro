@@ -88,7 +88,7 @@ func (h *VehicleHandler) Create(
 	if err != nil {
 
 		c.JSON(
-			500,
+			http.StatusBadRequest,
 			gin.H{
 				"error": err.Error(),
 			},
@@ -233,7 +233,7 @@ func (h *VehicleHandler) Update(
 		c.ShouldBindJSON(&request); err != nil {
 
 		c.JSON(
-			400,
+			http.StatusBadRequest,
 			gin.H{
 				"error": err.Error(),
 			},

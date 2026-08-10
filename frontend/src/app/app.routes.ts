@@ -23,6 +23,10 @@ import {
  VehicleCreateComponent
 } from './vehicles/vehicle-create/vehicle-create';
 
+import {
+ PartsSearchComponent
+} from './parts/parts-search/parts-search';
+
 export const routes = [
 
 {
@@ -39,6 +43,14 @@ export const routes = [
 
     {
 
+    path:'vehicles/create',
+
+    component:
+    VehicleCreateComponent
+
+    },
+    {
+
     path:'vehicles',
 
     component:
@@ -46,12 +58,8 @@ export const routes = [
 
     },
     {
-
-    path:'vehicles/create',
-
-    component:
-    VehicleCreateComponent
-
+    path:'parts',
+    component: PartsSearchComponent
     },
     {
 

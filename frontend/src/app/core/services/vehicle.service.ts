@@ -30,22 +30,13 @@ import {
 })
 export class VehicleService {
 
-
-  private api =
-    environment.apiUrl;
-
-
+  private api = environment.apiUrl;
 
   constructor(
     private http: HttpClient,
   ) {}
 
-
-
-  getVehicles():
-
-  Observable<Vehicle[]> {
-
+  getVehicles(): Observable<Vehicle[]> {
 
     return this.http.get<Vehicle[]>(
 
@@ -53,17 +44,11 @@ export class VehicleService {
 
     );
 
-
   }
 
-
-
   createVehicle(
-
     vehicle: CreateVehicleRequest
-
   ) {
-
 
     return this.http.post(
 
@@ -73,8 +58,6 @@ export class VehicleService {
 
     );
 
-
   }
-
 
 }

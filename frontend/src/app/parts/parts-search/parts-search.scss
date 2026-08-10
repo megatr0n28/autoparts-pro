@@ -1,0 +1,40 @@
+.search-form {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.search-status {
+  margin: 16px 0;
+}
+
+.results {
+  margin-top: 20px;
+}
+
+.part-result {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  background: #fff;
+}
+
+.part-result h4 {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.part-result p {
+  margin: 6px 0;
+}
+
+.error {
+  margin: 16px 0;
+  padding: 12px;
+  border-radius: 6px;
+  background: #ffebee;
+  color: #b71c1c;
+}

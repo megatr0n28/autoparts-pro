@@ -8,39 +8,39 @@ import (
 )
 
 type Vehicle struct {
-	ID uuid.UUID
+	ID uuid.UUID `json:"id"`
 
-	CustomerID uuid.UUID
+	CustomerID uuid.UUID `json:"customer_id"`
 
-	VIN string
+	VIN string `json:"vin"`
 
-	Year int
+	Year int `json:"year"`
 
-	Make string
+	Make string `json:"make"`
 
-	Model string
+	Model string `json:"model"`
 
-	Trim string
+	Trim string `json:"trim"`
 
-	Engine string
+	Engine string `json:"engine"`
 
-	Drivetrain string
+	Drivetrain string `json:"drivetrain"`
 
-	Transmission string
+	Transmission string `json:"transmission"`
 
-	Mileage int
+	Mileage int `json:"mileage"`
 
-	Color string
+	Color string `json:"color"`
 
-	LicensePlate string
+	LicensePlate string `json:"license_plate"`
 
-	State string
+	State string `json:"state"`
 
-	IsPrimary bool
+	IsPrimary bool `json:"is_primary"`
 
-	CreatedAt time.Time
+	CreatedAt time.Time `json:"created_at"`
 
-	UpdatedAt time.Time
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 func (Vehicle) TableName() string {

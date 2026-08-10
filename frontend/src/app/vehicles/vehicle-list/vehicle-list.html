@@ -2,94 +2,149 @@
   Vehicles
 </h2>
 
+<mat-card
+  *ngIf="success"
+  class="success-card"
+>
+
+  {{ success }}
+
+</mat-card>
+
+<p>
+  Vehicle count:
+  {{ dataSource.data.length }}
+</p>
+
+
+<!-- Temporary debug
+<pre>
+{{ dataSource.data | json }}
+</pre> -->
+
 
 <table
-mat-table
-[dataSource]="vehicles"
-class="mat-elevation-z2"
+  mat-table
+  [dataSource]="dataSource"
+  class="mat-elevation-z2"
 >
 
 
-<ng-container matColumnDef="year">
+  <ng-container matColumnDef="year">
 
-<th mat-header-cell *matHeaderCellDef>
-Year
-</th>
+    <th
+      mat-header-cell
+      *matHeaderCellDef
+    >
+      Year
+    </th>
 
-<td mat-cell *matCellDef="let vehicle">
-{{vehicle.year}}
-</td>
+    <td
+      mat-cell
+      *matCellDef="let vehicle"
+    >
+      {{ vehicle.year }}
+    </td>
 
-</ng-container>
-
-
-
-<ng-container matColumnDef="make">
-
-<th mat-header-cell *matHeaderCellDef>
-Make
-</th>
-
-<td mat-cell *matCellDef="let vehicle">
-{{vehicle.make}}
-</td>
-
-</ng-container>
+  </ng-container>
 
 
 
-<ng-container matColumnDef="model">
+  <ng-container matColumnDef="make">
 
-<th mat-header-cell *matHeaderCellDef>
-Model
-</th>
+    <th
+      mat-header-cell
+      *matHeaderCellDef
+    >
+      Make
+    </th>
 
-<td mat-cell *matCellDef="let vehicle">
-{{vehicle.model}}
-</td>
+    <td
+      mat-cell
+      *matCellDef="let vehicle"
+    >
+      {{ vehicle.make }}
+    </td>
 
-</ng-container>
-
-
-
-<ng-container matColumnDef="vin">
-
-<th mat-header-cell *matHeaderCellDef>
-VIN
-</th>
-
-<td mat-cell *matCellDef="let vehicle">
-{{vehicle.vin}}
-</td>
-
-</ng-container>
+  </ng-container>
 
 
 
-<ng-container matColumnDef="license_plate">
+  <ng-container matColumnDef="model">
 
-<th mat-header-cell *matHeaderCellDef>
-Plate
-</th>
+    <th
+      mat-header-cell
+      *matHeaderCellDef
+    >
+      Model
+    </th>
 
-<td mat-cell *matCellDef="let vehicle">
-{{vehicle.license_plate}}
-</td>
+    <td
+      mat-cell
+      *matCellDef="let vehicle"
+    >
+      {{ vehicle.model }}
+    </td>
 
-</ng-container>
-
-
-
-<tr
-mat-header-row
-*matHeaderRowDef="displayedColumns">
-</tr>
+  </ng-container>
 
 
-<tr
-mat-row
-*matRowDef="let row; columns: displayedColumns;">
-</tr>
+
+  <ng-container matColumnDef="vin">
+
+    <th
+      mat-header-cell
+      *matHeaderCellDef
+    >
+      VIN
+    </th>
+
+    <td
+      mat-cell
+      *matCellDef="let vehicle"
+    >
+      {{ vehicle.vin }}
+    </td>
+
+  </ng-container>
+
+
+
+  <ng-container matColumnDef="license_plate">
+
+    <th
+      mat-header-cell
+      *matHeaderCellDef
+    >
+      Plate
+    </th>
+
+    <td
+      mat-cell
+      *matCellDef="let vehicle"
+    >
+      {{ vehicle.license_plate }}
+    </td>
+
+  </ng-container>
+
+
+
+  <tr
+    mat-header-row
+    *matHeaderRowDef="displayedColumns"
+  >
+  </tr>
+
+
+  <tr
+    mat-row
+    *matRowDef="
+      let row;
+      columns: displayedColumns
+    "
+  >
+  </tr>
 
 
 </table>

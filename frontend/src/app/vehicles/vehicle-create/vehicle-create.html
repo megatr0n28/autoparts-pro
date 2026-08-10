@@ -1,57 +1,158 @@
 <h2>
-Add Vehicle
+  Add Vehicle
 </h2>
 
+<mat-card
+  class="error-card"
+  *ngIf="error"
+>
+
+  {{ error }}
+
+</mat-card>
 
 <form
-[formGroup]="vehicleForm"
-(ngSubmit)="submit()"
+
+  [formGroup]="vehicleForm"
+
+  (ngSubmit)="submit()"
+
 >
 
 
-<input
-matInput
-placeholder="Year"
-formControlName="year"
-/>
+
+<mat-form-field>
+
+  <mat-label>
+    Year
+  </mat-label>
 
 
-<input
-matInput
-placeholder="Make"
-formControlName="make"
-/>
+  <input
+
+    matInput
+
+    type="number"
+
+    formControlName="year"
+
+  />
 
 
-<input
-matInput
-placeholder="Model"
-formControlName="model"
-/>
+</mat-form-field>
 
 
-<input
-matInput
-placeholder="VIN"
-formControlName="vin"
-/>
+<div
+*ngIf="
+vehicleForm.controls['year'].touched &&
+vehicleForm.controls['year'].invalid
+"
+>
+
+  Enter a valid vehicle year.
+
+</div>
 
 
-<input
-matInput
-placeholder="License Plate"
-formControlName="license_plate"
-/>
 
+
+<mat-form-field>
+
+  <mat-label>
+    Make
+  </mat-label>
+
+
+  <input
+
+    matInput
+
+    formControlName="make"
+
+  />
+
+
+</mat-form-field>
+
+
+
+<mat-form-field>
+
+  <mat-label>
+    Model
+  </mat-label>
+
+
+  <input
+
+    matInput
+
+    formControlName="model"
+
+  />
+
+
+</mat-form-field>
+
+
+
+
+<mat-form-field>
+
+  <mat-label>
+    VIN
+  </mat-label>
+
+
+  <input
+
+    matInput
+
+    formControlName="vin"
+
+  />
+
+
+</mat-form-field>
+
+
+
+
+<mat-form-field>
+
+  <mat-label>
+    License Plate
+  </mat-label>
+
+
+  <input
+
+    matInput
+
+    formControlName="license_plate"
+
+  />
+
+
+</mat-form-field>
 
 <button
-mat-raised-button
-color="primary"
+
+  mat-raised-button
+
+  color="primary"
+
+  type="submit"
+
+  [disabled]="submitting"
+
 >
 
-Save
+{{ submitting ? 'Saving...' : 'Save Vehicle' }}
+
 
 </button>
+
 
 
 </form>

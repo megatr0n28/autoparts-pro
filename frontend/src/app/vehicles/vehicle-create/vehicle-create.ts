@@ -1,5 +1,7 @@
 import {
   Component,
+  OnDestroy,
+  ChangeDetectorRef,
 } from '@angular/core';
 
 
@@ -27,6 +29,16 @@ import {
 
 
 import {
+  MatCardModule,
+} from '@angular/material/card';
+
+
+import {
+  CommonModule,
+} from '@angular/common';
+
+
+import {
   VehicleService,
 } from '../../core/services/vehicle.service';
 
@@ -34,17 +46,21 @@ import {
 
 @Component({
 
-  selector:'app-vehicle-create',
+  selector: 'app-vehicle-create',
 
-  standalone:true,
+  standalone: true,
 
-  imports:[
+  imports: [
+
+    CommonModule,
 
     ReactiveFormsModule,
 
     MatInputModule,
 
     MatButtonModule,
+
+    MatCardModule,
 
   ],
 
@@ -57,10 +73,16 @@ import {
 })
 
 
-export class VehicleCreateComponent {
+export class VehicleCreateComponent implements OnDestroy{
 
 
   vehicleForm: FormGroup;
+
+
+  submitting = false;
+
+
+  error = '';
 
 
 
@@ -68,48 +90,79 @@ export class VehicleCreateComponent {
 
     private fb: FormBuilder,
 
-    private service: VehicleService,
+    private vehicleService: VehicleService,
 
     private router: Router,
+    private cd: ChangeDetectorRef,
 
-  ){
+  ) {
 
 
     this.vehicleForm =
+
       this.fb.group({
 
-        year:[
+        year: [
 
           '',
 
-          Validators.required
+          [
+
+            Validators.required,
+
+            Validators.min(1900),
+
+            Validators.max(
+              new Date().getFullYear()
+            ),
+
+          ],
 
         ],
 
 
-        make:[
+        make: [
 
           '',
 
-          Validators.required
+          [
+
+            Validators.required,
+
+            Validators.minLength(2),
+
+          ],
 
         ],
 
 
-        model:[
+        model: [
 
           '',
 
-          Validators.required
+          [
+
+            Validators.required,
+
+            Validators.minLength(1),
+
+          ],
 
         ],
 
 
-        vin:[''],
+        vin: [
+
+          '',
+
+        ],
 
 
-        license_plate:[''],
+        license_plate: [
 
+          '',
+
+        ],
 
       });
 
@@ -118,13 +171,24 @@ export class VehicleCreateComponent {
 
 
 
+  submit(): void {
 
-  submit(){
+
+    /*
+      Clear previous errors
+    */
+
+    this.error = '';
 
 
-    if(
+
+    if (
       this.vehicleForm.invalid
-    ){
+    ) {
+
+
+      this.vehicleForm.markAllAsTouched();
+
 
       return;
 
@@ -132,38 +196,86 @@ export class VehicleCreateComponent {
 
 
 
-    this.service
+    this.submitting = true;
+
+
+
+    /*
+      Angular form values return strings.
+      Go expects year as int.
+    */
+
+    const vehicle = {
+
+      ...this.vehicleForm.value,
+
+
+      year:
+
+        Number(
+          this.vehicleForm.value.year
+        ),
+
+    };
+
+
+
+    this.vehicleService
 
       .createVehicle(
-
-        this.vehicleForm.value
-
+        vehicle
       )
 
       .subscribe({
 
-        next:()=>{
+        next: () => {
+
+          this.submitting = false;
 
 
-          this.router.navigate([
-            '/vehicles'
-          ]);
-
+          this.router.navigate(
+            ['/vehicles'],
+            {
+              queryParams: {
+                message: 'Vehicle created successfully'
+              }
+            }
+          );
 
         },
 
 
-        error:err=>{
+        error: (err) => {
 
-          console.error(err);
+          console.log(
+            "HTTP ERROR RECEIVED",
+            err
+          );
 
-        }
 
+          this.error =
+            err.error?.error ??
+            "Unable to create vehicle";
+
+
+          this.submitting = false;
+
+
+          this.cd.detectChanges();
+
+        },
 
       });
 
 
   }
+  ngOnDestroy(): void {
+
+  console.log(
+    "VehicleCreateComponent destroyed"
+  );
+
+}
 
 
 }
