@@ -1,6 +1,9 @@
 package bootstrap
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/auth"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/authz"
@@ -81,16 +84,26 @@ func New() (*Application, error) {
 	authzClient, err :=
 		authz.New(
 			authz.Config{
-				APIURL: cfg.OpenFGA.APIURL,
-
-				StoreID: cfg.OpenFGA.StoreID,
-
+				APIURL:               cfg.OpenFGA.APIURL,
+				StoreID:              cfg.OpenFGA.StoreID,
 				AuthorizationModelID: cfg.OpenFGA.AuthorizationModelID,
 			},
 		)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(
+			"initialize OpenFGA: %w",
+			err,
+		)
+	}
+	if err := authzClient.CheckConnection(
+		context.Background(),
+	); err != nil {
+
+		return nil, fmt.Errorf(
+			"connect to OpenFGA: %w",
+			err,
+		)
 	}
 
 	// ----------------------------

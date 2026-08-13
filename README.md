@@ -285,7 +285,328 @@ ok github.com/megatr0n28/autoparts-pro/backend/tests/smoke
 ```
 
 ---
+## OpenFGA Authorization
 
+AutoParts Pro uses [OpenFGA](https://openfga.dev/) for fine-grained authorization.
+
+OpenFGA is responsible for determining whether a user has permission to access
+resources such as vehicles, customers, orders, and invoices.
+
+### OpenFGA Architecture
+
+When running with Docker Compose:
+
+```text
+                         Docker Network
+                              |
+             +----------------+----------------+
+             |                                 |
+             v                                 v
+       autoparts-api                       openfga
+          :8080                             :8080
+             |                                 ^
+             |                                 |
+             +---- http://openfga:8080 --------+
+```
+---
+* The API container communicates with OpenFGA using:
+`http://openfga:8080`
+* From the host machine, OpenFGA is exposed through:
+http://localhost:8082
+* Do not use localhost:8082 from inside the API container.
+* Inside Docker, localhost refers to the API container itself. The Docker
+service name openfga must be used for container-to-container communication.
+#### OpenFGA Store
+The AutoParts Pro OpenFGA store is:
+```sh
+Store ID:
+01KZW369WB6CPEY6RBR42NWF1B
+```
+The current authorization model is:
+```sh
+Authorization Model ID:
+01KZW3ZKH129S283DVN5JD501G
+```
+These values are development environment configuration values.
+#### OpenFGA Configuration
+The OpenFGA configuration is defined in:
+```sh
+backend/internal/config/config.go
+```
+The configuration structure is:
+```go
+type OpenFGAConfig struct {
+    APIURL               string `mapstructure:"apiurl"`
+    StoreID              string `mapstructure:"storeid"`
+    AuthorizationModelID string `mapstructure:"authorizationmodelid"`
+}
+```
+The application configuration contains:
+```go
+type Config struct {
+    App      AppConfig      `mapstructure:"app"`
+    Log      LogConfig      `mapstructure:"log"`
+    Database DatabaseConfig `mapstructure:"database"`
+    Redis    RedisConfig    `mapstructure:"redis"`
+    JWT      JWTConfig      `mapstructure:"jwt"`
+    OpenFGA  OpenFGAConfig  `mapstructure:"openfga"`
+}
+```
+#### Development YAML Configuration
+The development configuration is located at:
+```sh
+backend/configs/development.yaml
+```
+The OpenFGA section should contain:
+```YAML
+openfga:
+  apiurl: "http://openfga:8080"
+  storeid: "01KZW369WB6CPEY6RBR42NWF1B"
+  authorizationmodelid: "01KZW3ZKH129S283DVN5JD501G"
+```
+#### Docker Environment Variables
+The API container receives the OpenFGA configuration through environment
+variables:
+```YAML
+OPENFGA_APIURL: http://openfga:8080
+OPENFGA_STOREID: 01KZW369WB6CPEY6RBR42NWF1B
+OPENFGA_AUTHORIZATIONMODELID: 01KZW3ZKH129S283DVN5JD501G
+```
+Viper maps these environment variables to the OpenFGA configuration using:
+```GO
+v.SetEnvKeyReplacer(
+    strings.NewReplacer(".", "_"),
+)
+
+v.AutomaticEnv()
+```
+Therefore:
+```text
+openfga.apiurl
+        |
+        +--> OPENFGA_APIURL
+
+openfga.storeid
+        |
+        +--> OPENFGA_STOREID
+
+openfga.authorizationmodelid
+        |
+        +--> OPENFGA_AUTHORIZATIONMODELID
+```
+#### OpenFGA Client
+The OpenFGA client is implemented in:
+```text
+backend/internal/authz/openfga.go
+```
+The client provides:
+```GO
+Check(
+    ctx context.Context,
+    user string,
+    relation string,
+    object string,
+)
+```
+for authorization checks.
+It also provides:
+```Go
+CheckConnection(
+    ctx context.Context,
+)
+```
+to verify connectivity to OpenFGA.
+The client is initialized during application startup.
+#### Verify OpenFGA
+Check the OpenFGA service:
+```bash
+curl http://localhost:8082/stores
+```
+A successful response should contain the AutoParts Pro store:
+```JSON
+{
+  "stores": [
+    {
+      "id": "01KZW369WB6CPEY6RBR42NWF1B",
+      "name": "autoparts-pro"
+    }
+  ],
+  "continuation_token": ""
+}
+```
+#### Verify Authorization Model
+List the authorization models:
+```bash
+curl \
+  "http://localhost:8082/stores/01KZW369WB6CPEY6RBR42NWF1B/authorization-models"
+```
+The response should contain:
+```text
+01KZW3ZKH129S283DVN5JD501G
+```
+as the current authorization model ID.
+
+#### Verify Docker Services
+Check the running services:
+```bash
+docker compose ps
+```
+Expected services include:
+```text
+autoparts-api
+autoparts-frontend
+autoparts-postgres
+autoparts-redis
+openfga
+```
+View API logs:
+```bash
+docker compose logs -f api
+```
+View OpenFGA logs:
+```bash
+docker compose logs -f openfga
+```
+#### Rebuild After Configuration Changes
+After modifying OpenFGA configuration or Go source:
+```bash
+docker compose down
+docker compose up -d --build
+```
+Check the API:
+```bash
+curl http://localhost:8080/api/v1/health
+```
+Expected response:
+```json
+{
+  "status": "ok"
+}
+```
+Check OpenFGA:
+```bash
+curl http://localhost:8082/stores
+```
+---
+## OpenFGA Troubleshooting
+```text
+relation "store" does not exist
+```
+If OpenFGA reports:
+```text
+ERROR: relation "store" does not exist
+```
+- OpenFGA is connected to a PostgreSQL database that has not been initialized
+with the OpenFGA schema.
+- The application database and OpenFGA database should not be treated as the
+same logical database unless OpenFGA has explicitly initialized its schema.
+- Check the OpenFGA PostgreSQL configuration and initialization.
+---
+404 page not found on port 8080
+If:
+```bash
+curl http://localhost:8080/stores
+```
+returns:
+```text
+404 page not found
+```
+you are likely calling the AutoParts Pro API rather than OpenFGA.
+AutoParts Pro uses:
+```text
+localhost:8080
+```
+OpenFGA uses:
+```text
+localhost:8082
+```
+---
+`Internal Server Error` from `/stores`
+
+If:
+```bash
+curl http://localhost:8081/stores
+```
+returns:
+```json
+{
+  "code": "internal_error",
+  "message": "Internal Server Error"
+}
+```
+verify that the request is using the correct OpenFGA HTTP port.
+
+OpenFGA's gRPC and HTTP ports are separate.
+
+The current host configuration uses:
+```text
+OpenFGA HTTP: localhost:8082
+OpenFGA gRPC: localhost:8081
+```
+The REST API should be tested with:
+```bash
+curl http://localhost:8082/stores
+```
+---
+## Authorization Roadmap
+OpenFGA will eventually be used for relationships such as:
+```text
+user -> customer
+customer -> vehicle
+customer -> invoice
+customer -> order
+```
+For example:
+```text
+user:123
+    |
+    +-- owns --> vehicle:456
+```
+The application can then ask OpenFGA:
+```text
+Can user:123 view vehicle:456?
+```
+The expected authorization flow is:
+```text
+Angular Frontend
+       |
+       v
+AutoParts Pro API
+       |
+       v
+OpenFGA Authorization Check
+       |
+       +---- allowed ----> access resource
+       |
+       +---- denied ------> HTTP 403
+```
+---
+The next implementation step is to define the AutoParts Pro authorization
+model and write the initial customer-to-vehicle ownership tuples.
+
+### One important README correction
+
+Your current ports should be documented as:
+```text
+| Service | Host | Container |
+|---|---:|---:|
+| AutoParts API | `8080` | `8080` |
+| OpenFGA HTTP | `8082` | `8080` |
+| OpenFGA gRPC | `8081` | `8081` |
+| PostgreSQL | `5432` | `5432` |
+| Redis | `6379` | `6379` |
+| Angular | `4200` | `4200` |
+```
+The **API → OpenFGA** connection is:
+
+```text
+http://openfga:8080
+```
+while your Mac → OpenFGA connection is:
+```text
+http://localhost:8082
+```
+---
 # Troubleshooting
 
 ## API cannot connect to PostgreSQL

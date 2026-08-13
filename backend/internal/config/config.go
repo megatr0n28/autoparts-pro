@@ -56,9 +56,9 @@ type JWTConfig struct {
 }
 
 type OpenFGAConfig struct {
-	APIURL               string `mapstructure:"api_url"`
-	StoreID              string `mapstructure:"store_id"`
-	AuthorizationModelID string `mapstructure:"authorization_model_id"`
+	APIURL               string `mapstructure:"apiurl"`
+	StoreID              string `mapstructure:"storeid"`
+	AuthorizationModelID string `mapstructure:"authorizationmodelid"`
 }
 
 func Load() (*Config, error) {
@@ -98,6 +98,12 @@ func Load() (*Config, error) {
 	if err := v.Unmarshal(&cfg); err != nil {
 		return nil, err
 	}
+	fmt.Printf(
+		"OpenFGA configuration: APIURL=%s StoreID=%s ModelID=%s\n",
+		cfg.OpenFGA.APIURL,
+		cfg.OpenFGA.StoreID,
+		cfg.OpenFGA.AuthorizationModelID,
+	)
 
 	// Parse JWT duration because Unmarshal doesn't convert "24h" into time.Duration automatically.
 	cfg.JWT.Expiration, err = time.ParseDuration(v.GetString("jwt.expiration"))
