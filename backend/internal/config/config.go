@@ -16,6 +16,7 @@ type Config struct {
 	Database DatabaseConfig `mapstructure:"database"`
 	Redis    RedisConfig    `mapstructure:"redis"`
 	JWT      JWTConfig      `mapstructure:"jwt"`
+	OpenFGA  OpenFGAConfig  `mapstructure:"openfga"`
 }
 
 type AppConfig struct {
@@ -52,6 +53,12 @@ type JWTConfig struct {
 	Secret            string        `mapstructure:"secret"`
 	Expiration        time.Duration `mapstructure:"expiration"`
 	RefreshExpiration time.Duration `mapstructure:"refresh_expiration"`
+}
+
+type OpenFGAConfig struct {
+	APIURL               string `mapstructure:"api_url"`
+	StoreID              string `mapstructure:"store_id"`
+	AuthorizationModelID string `mapstructure:"authorization_model_id"`
 }
 
 func Load() (*Config, error) {

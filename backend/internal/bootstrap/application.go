@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/auth"
+	"github.com/megatr0n28/autoparts-pro/backend/internal/authz"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/config"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/database"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/handler"
@@ -22,6 +23,7 @@ type Application struct {
 	Router         *gin.Engine
 	vehicleHandler *handler.VehicleHandler
 	searchHandler  *handler.SearchHandler
+	authzClient    *authz.Client
 }
 
 func New() (*Application, error) {
@@ -75,6 +77,21 @@ func New() (*Application, error) {
 	authHandler := handler.NewAuthHandler(
 		authService,
 	)
+
+	authzClient, err :=
+		authz.New(
+			authz.Config{
+				APIURL: cfg.OpenFGA.APIURL,
+
+				StoreID: cfg.OpenFGA.StoreID,
+
+				AuthorizationModelID: cfg.OpenFGA.AuthorizationModelID,
+			},
+		)
+
+	if err != nil {
+		return nil, err
+	}
 
 	// ----------------------------
 	// Customer Service
@@ -144,6 +161,7 @@ func New() (*Application, error) {
 		Router:         appRouter,
 		vehicleHandler: vehicleHandler,
 		searchHandler:  searchHandler,
+		authzClient:    authzClient,
 	}
 
 	return app, nil

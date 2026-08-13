@@ -28,3 +28,8 @@ jwt:
   secret: development-secret
   expiration: "15m"
   refresh_expiration: "720h"
+
+openfga:
+  api_url: "http://openfga:8080"
+  store_id: "01KZW369WB6CPEY6RBR42NWF1B"
+  authorization_model_id: "01KZW3ZKH129S283DVN5JD501G"

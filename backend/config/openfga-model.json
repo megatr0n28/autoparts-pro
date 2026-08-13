@@ -1,0 +1,67 @@
+{
+  "schema_version": "1.1",
+  "type_definitions": [
+    {
+      "type": "user"
+    },
+    {
+      "type": "customer",
+      "relations": {
+        "owner": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "owner": {
+            "directly_related_user_types": [
+              "user"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "vehicle",
+      "relations": {
+        "owner": {
+          "this": {}
+        },
+        "viewer": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "owner": {
+            "directly_related_user_types": [
+              "user"
+            ]
+          },
+          "viewer": {
+            "directly_related_user_types": [
+              "user"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "part_search",
+      "relations": {
+        "viewer": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "viewer": {
+            "directly_related_user_types": [
+              "user"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

@@ -27,114 +27,71 @@ services:
     networks:
       - autoparts-network
   postgres:
-
     image: postgres:17-alpine
-
     container_name: autoparts-postgres
-
     restart: unless-stopped
 
     environment:
-
       POSTGRES_DB: autoparts
-
       POSTGRES_USER: postgres
-
       POSTGRES_PASSWORD: postgres
 
-
     ports:
-
       - "5432:5432"
 
-
     volumes:
-
       - postgres_data:/var/lib/postgresql/data
-
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
 
     healthcheck:
-
       test:
         [
           "CMD-SHELL",
           "pg_isready -U postgres -d autoparts"
         ]
-
       interval: 10s
-
       timeout: 5s
-
       retries: 10
 
-
     networks:
-
       - autoparts-network
 
-
-
   redis:
-
     image: redis:7-alpine
-
     container_name: autoparts-redis
-
     restart: unless-stopped
 
-
     ports:
-
       - "6379:6379"
 
-
     volumes:
-
       - redis_data:/data
 
-
     healthcheck:
-
       test:
         [
           "CMD",
           "redis-cli",
           "ping"
         ]
-
       interval: 10s
-
       timeout: 5s
-
       retries: 10
 
-
     networks:
-
       - autoparts-network
 
-
-
   api:
-
     build:
-
       context: ./backend
 
-
     container_name: autoparts-api
-
-
     restart: unless-stopped
 
-
     ports:
-
       - "8080:8080"
 
-
     environment:
-
       APP_ENV: development
 
       DATABASE_HOST: postgres
@@ -151,21 +108,30 @@ services:
       JWT_EXPIRATION: "15m"
       JWT_REFRESH_EXPIRATION: "720h"
 
+      # OpenFGA
+      OPENFGA_API_URL: http://openfga:8080
+      OPENFGA_STORE_ID: 01KZW369WB6CPEY6RBR42NWF1B
+      OPENFGA_AUTHORIZATION_MODEL_ID: 01KZW3ZKH129S283DVN5JD501G
+
+      # Ory Hydra
+      HYDRA_PUBLIC_URL: http://localhost:4444
+      HYDRA_ADMIN_URL: http://hydra:4445
+
 
     depends_on:
-
       postgres:
-
         condition: service_healthy
-
 
       redis:
-
         condition: service_healthy
 
+      openfga:
+        condition: service_started
 
+      hydra:
+        condition: service_started
+    
     healthcheck:
-
       test:
         [
           "CMD",
@@ -174,30 +140,99 @@ services:
           "-q",
           "http://localhost:8080/api/v1/health"
         ]
-
       interval: 10s
-
       timeout: 5s
-
       retries: 10
 
-
     networks:
-
       - autoparts-network
 
+  # --------------------------------------------------
+  # Ory Hydra
+  # --------------------------------------------------
 
+  hydra:
+    image: oryd/hydra:v2.3.0
+    container_name: autoparts-hydra
+    restart: unless-stopped
+
+    command:
+      serve
+      -c
+      /etc/config/hydra/hydra.yml
+      all
+
+    ports:
+      - "4444:4444"
+      - "4445:4445"
+
+    environment:
+      DSN: postgres://postgres:postgres@postgres:5432/hydra?sslmode=disable
+
+      URLS_SELF_ISSUER: http://localhost:4444/
+      URLS_LOGIN: http://localhost:4200/login
+      URLS_CONSENT: http://localhost:4200/consent
+      URLS_ERROR: http://localhost:4200/error
+
+      SECRETS_SYSTEM: development-hydra-secret-change-me
+      OIDC_SUBJECT_IDENTIFIERS_PAIRWISE_SALT: development-pairwise-salt
+
+      LOG_LEAK_SENSITIVE_VALUES: "true"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    networks:
+      - autoparts-network
+
+  # --------------------------------------------------
+  # OpenFGA
+  # --------------------------------------------------
+
+  openfga:
+    image: openfga/openfga:latest
+    container_name: autoparts-openfga
+    restart: unless-stopped
+
+    command:
+      - run
+
+    ports:
+      - "8082:8080"
+      - "8083:8081"
+
+    environment:
+      OPENFGA_DATASTORE_ENGINE: postgres
+      OPENFGA_DATASTORE_URI: postgres://postgres:postgres@postgres:5432/openfga?sslmode=disable
+      OPENFGA_LOG_FORMAT: json
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      openfga-migrate:
+        condition: service_completed_successfully
+
+    networks:
+      - autoparts-network
+
+  openfga-migrate:
+    image: openfga/openfga:v1.18.3
+    container_name: autoparts-openfga-migrate
+    command:
+      - migrate
+      - --datastore-engine=postgres
+      - --datastore-uri=postgres://postgres:postgres@postgres:5432/openfga?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - autoparts-network
 
 volumes:
-
   postgres_data:
-
   redis_data:
 
-
-
 networks:
-
   autoparts-network:
-
     driver: bridge
