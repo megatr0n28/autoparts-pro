@@ -1,32 +1,18 @@
-<mat-toolbar color="primary">
+<header class="navbar">
+  <div class="brand">
+    <mat-icon>directions_car</mat-icon>
 
+    <span>AutoParts Pro</span>
+  </div>
 
-  <span>
-    AutoParts Pro
-  </span>
-
-
-  <span class="spacer"></span>
-
-
-  <span class="user-info">
-
-    {{ role }}
-
-  </span>
-
-
-  <button
-
-    mat-button
-
-    (click)="logout()"
-
-  >
-
-    Logout
-
-  </button>
-
-
-</mat-toolbar>
+  <div class="navbar-actions">
+    <button
+      mat-button
+      type="button"
+      (click)="logout()"
+    >
+      <mat-icon>logout</mat-icon>
+      Logout
+    </button>
+  </div>
+</header>

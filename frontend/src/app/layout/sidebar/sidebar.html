@@ -1,42 +1,16 @@
-<mat-nav-list>
+<aside class="sidebar">
+  <nav>
+    @for (item of navigationItems; track item.route) {
+      <a
+        class="nav-item"
+        [routerLink]="item.route"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+      >
+        <mat-icon>{{ item.icon }}</mat-icon>
 
-
-<a
-mat-list-item
-routerLink="/"
->
-
-Dashboard
-
-</a>
-
-
-<a
-mat-list-item
-routerLink="/vehicles"
->
-
-Vehicles
-
-</a>
-
-<a
-mat-list-item
-routerLink="/vehicles/create"
->
-
-Add Vehicle
-
-</a>
-
-<a
-mat-list-item
-routerLink="/parts"
->
-
-Parts Search
-
-</a>
-
-
-</mat-nav-list>
+        <span>{{ item.label }}</span>
+      </a>
+    }
+  </nav>
+</aside>

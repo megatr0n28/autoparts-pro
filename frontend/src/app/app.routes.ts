@@ -1,122 +1,57 @@
 import { Routes } from '@angular/router';
 
-import { DashboardComponent } from './dashboard/dashboard';
+import { MainLayoutComponent } from './layout/main-layout/main-layout';
 
-import { LoginComponent } from './auth/login/login';
+import { authGuard } from './core/guards/auth.guard';
 
-import { RegisterComponent } from './auth/register/register';
+import { VehicleListComponent } from './vehicles/vehicle-list/vehicle-list';
 
-import {
-  MainLayoutComponent,
-} from './layout/main-layout/main-layout';
+import { VehicleCreateComponent } from './vehicles/vehicle-create/vehicle-create';
 
-import {
-  authGuard,
-} from './core/guards/auth.guard';
+import { PartsSearchComponent } from './parts/parts-search/parts-search';
 
-import {
- VehicleListComponent
-} from './vehicles/vehicle-list/vehicle-list';
+export const routes: Routes = [
+  {
+    path: '',
+    component: MainLayoutComponent,
+    canActivate: [authGuard],
 
+    children: [
+      {
+        path: 'vehicles/create',
+        component: VehicleCreateComponent,
+      },
 
-import {
- VehicleCreateComponent
-} from './vehicles/vehicle-create/vehicle-create';
+      {
+        path: 'vehicles',
+        component: VehicleListComponent,
+      },
 
-import {
- PartsSearchComponent
-} from './parts/parts-search/parts-search';
+      {
+        path: 'parts',
+        component: PartsSearchComponent,
+      },
 
-export const routes = [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./dashboard/dashboard')
+            .then(m => m.DashboardComponent),
+      },
+    ],
+  },
 
-{
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./auth/login/login')
+        .then(m => m.LoginComponent),
+  },
 
-  path: '',
-
-  component: MainLayoutComponent,
-
-  canActivate: [
-    authGuard
-  ],
-
-  children: [
-
-    {
-
-    path:'vehicles/create',
-
-    component:
-    VehicleCreateComponent
-
-    },
-    {
-
-    path:'vehicles',
-
-    component:
-    VehicleListComponent
-
-    },
-    {
-    path:'parts',
-    component: PartsSearchComponent
-    },
-    {
-
-      path: '',
-
-      loadComponent: () =>
-
-        import(
-          './dashboard/dashboard'
-        )
-        .then(
-          m =>
-          m.DashboardComponent
-        )
-
-    },
-
-  ]
-
-},
-
-
-
-{
-
- path: 'login',
-
- loadComponent: () =>
-
- import(
- './auth/login/login'
- )
-
- .then(
- m =>
- m.LoginComponent
- )
-
-},
-
-
-
-{
-
- path: 'register',
-
- loadComponent: () =>
-
- import(
- './auth/register/register'
- )
-
- .then(
- m =>
- m.RegisterComponent
- )
-
-}
-
+  {
+    path: 'register',
+    loadComponent: () =>
+      import('./auth/register/register')
+        .then(m => m.RegisterComponent),
+  },
 ];
