@@ -32,4 +32,4 @@ jwt:
 openfga:
   apiurl: "http://openfga:8080"
   storeid: "01KZW369WB6CPEY6RBR42NWF1B"
-  authorizationmodelid: "01KZW3ZKH129S283DVN5JD501G"
+  authorizationmodelid: "01M00MXJSN9CWTT9MTYX59RMPE"

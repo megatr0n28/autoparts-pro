@@ -26,7 +26,7 @@ type Application struct {
 	Router         *gin.Engine
 	vehicleHandler *handler.VehicleHandler
 	searchHandler  *handler.SearchHandler
-	authzClient    *authz.Client
+	authorizer     *authz.Authorizer
 }
 
 func New() (*Application, error) {
@@ -81,14 +81,13 @@ func New() (*Application, error) {
 		authService,
 	)
 
-	authzClient, err :=
-		authz.New(
-			authz.Config{
-				APIURL:               cfg.OpenFGA.APIURL,
-				StoreID:              cfg.OpenFGA.StoreID,
-				AuthorizationModelID: cfg.OpenFGA.AuthorizationModelID,
-			},
-		)
+	openFGAClient, err := authz.New(
+		authz.Config{
+			APIURL:               cfg.OpenFGA.APIURL,
+			StoreID:              cfg.OpenFGA.StoreID,
+			AuthorizationModelID: cfg.OpenFGA.AuthorizationModelID,
+		},
+	)
 
 	if err != nil {
 		return nil, fmt.Errorf(
@@ -96,7 +95,7 @@ func New() (*Application, error) {
 			err,
 		)
 	}
-	if err := authzClient.CheckConnection(
+	if err := openFGAClient.CheckConnection(
 		context.Background(),
 	); err != nil {
 
@@ -105,6 +104,11 @@ func New() (*Application, error) {
 			err,
 		)
 	}
+
+	authorizer :=
+		authz.NewAuthorizer(
+			openFGAClient,
+		)
 
 	// ----------------------------
 	// Customer Service
@@ -125,6 +129,7 @@ func New() (*Application, error) {
 	vehicleService :=
 		vehicle.NewService(
 			repositories.Vehicle,
+			authorizer,
 		)
 
 	vehicleHandler :=
@@ -174,7 +179,7 @@ func New() (*Application, error) {
 		Router:         appRouter,
 		vehicleHandler: vehicleHandler,
 		searchHandler:  searchHandler,
-		authzClient:    authzClient,
+		authorizer:     authorizer,
 	}
 
 	return app, nil

@@ -1,0 +1,26 @@
+model
+  schema 1.1
+
+type user
+
+type customer
+  relations
+    define owner: [user]
+
+type vehicle
+  relations
+    define customer: [customer]
+    define owner: customer
+    define viewer: owner
+
+type invoice
+  relations
+    define customer: [customer]
+    define owner: customer
+    define viewer: owner
+
+type order
+  relations
+    define customer: [customer]
+    define owner: customer
+    define viewer: owner

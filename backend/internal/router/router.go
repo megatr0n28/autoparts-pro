@@ -154,10 +154,10 @@ func New(
 	// ----------------------------
 	// Parts Search Routes
 	// ----------------------------
-	searchRoutes := protected.Group("/search")
+	partsRoutes := protected.Group("/parts")
 	{
-		searchRoutes.GET(
-			"/parts",
+		partsRoutes.GET(
+			"/search",
 			searchHandler.SearchParts,
 		)
 	}

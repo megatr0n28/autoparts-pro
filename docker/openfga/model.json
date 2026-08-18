@@ -1,0 +1,84 @@
+{
+  "schema_version": "1.1",
+  "type_definitions": [
+    {
+      "type": "user"
+    },
+    {
+      "type": "customer",
+      "relations": {
+        "owner": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "owner": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "vehicle",
+      "relations": {
+        "customer": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "customer": {
+            "directly_related_user_types": [
+              {
+                "type": "customer"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "invoice",
+      "relations": {
+        "customer": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "customer": {
+            "directly_related_user_types": [
+              {
+                "type": "customer"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "part_search",
+      "relations": {
+        "requester": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "requester": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

@@ -607,6 +607,114 @@ while your Mac → OpenFGA connection is:
 http://localhost:8082
 ```
 ---
+## OpenFGA Vehicle Authorization
+
+AutoParts Pro uses OpenFGA to enforce vehicle ownership authorization.
+
+### Authorization Model
+
+The current authorization model includes:
+
+- `user`
+- `customer`
+- `vehicle`
+- `invoice`
+- `part_search`
+
+Vehicles use the `owner` relation.
+
+Example:
+
+```text
+user:54f38ddd-5a39-4bae-8408-29bf42b002d6
+    |
+    | owner
+    v
+vehicle:3b0449e5-e808-4d25-90a4-eb5ee9031768
+```
+---
+An OpenFGA authorization check determines whether the authenticated user is allowed to access the vehicle.
+#### JWT Authentication Context
+The JWT authentication middleware validates the access token and places the following values into the Gin request context:
+```text
+user_id
+customer_id
+role
+```
+The `user_id` value is stored as a string so handlers and services can retrieve it with:
+```Go
+c.GetString("user_id")
+```
+The middleware also resolves the authenticated user's customer profile and stores:
+```Go
+c.Set("customer_id", customer.ID.String())
+```
+#### Vehicle Authorization
+Vehicle authorization uses the authenticated user's OpenFGA identity:
+```text
+user:<user_id>
+```
+and the vehicle resource:
+```text
+vehicle:<vehicle_id>
+```
+The ownership relationship is:
+```text
+user:<user_id> --owner--> vehicle:<vehicle_id>
+```
+### Step 6 Authorization Verification
+The OpenFGA authorization flow has been verified with two users.
+#### Authorized User
+The vehicle owner was checked against the vehicle:
+```json
+{
+  "tuple_key": {
+    "user": "user:54f38ddd-5a39-4bae-8408-29bf42b002d6",
+    "relation": "owner",
+    "object": "vehicle:3b0449e5-e808-4d25-90a4-eb5ee9031768"
+  }
+}
+```
+OpenFGA returned:
+```json
+{
+  "allowed": true,
+  "resolution": ""
+}
+```
+The authenticated user was also able to retrieve the vehicle through:
+```text
+GET /api/v1/vehicles
+```
+Response:
+```json
+[
+  {
+    "id": "3b0449e5-e808-4d25-90a4-eb5ee9031768",
+    "customer_id": "e9947891-e95c-4be2-bb14-64610665bda3",
+    "vin": "4T1BF1FK5MU123456",
+    "year": 2021,
+    "make": "Toyota",
+    "model": "Camry",
+    "license_plate": "TEST456",
+    "state": "DE",
+    "is_primary": false
+  }
+]
+```
+#### Unauthorized User
+A second test user was checked against the same vehicle.
+
+OpenFGA returned:
+```json
+{
+  "allowed": false,
+  "resolution": ""
+}
+```
+This confirms that OpenFGA denies ownership access when the authenticated user does not own the vehicle.
+
+---
 # Troubleshooting
 
 ## API cannot connect to PostgreSQL

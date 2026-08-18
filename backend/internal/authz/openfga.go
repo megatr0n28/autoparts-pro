@@ -57,6 +57,7 @@ func New(cfg Config) (*Client, error) {
 	}, nil
 }
 
+// Check evaluates an OpenFGA relationship.
 func (c *Client) Check(
 	ctx context.Context,
 	user string,
@@ -91,6 +92,85 @@ func (c *Client) Check(
 	return *response.Allowed, nil
 }
 
+// WriteTuple creates an OpenFGA relationship tuple.
+func (c *Client) WriteTuple(
+	ctx context.Context,
+	user string,
+	relation string,
+	object string,
+) error {
+
+	if c == nil || c.fga == nil {
+		return fmt.Errorf(
+			"OpenFGA client is not configured",
+		)
+	}
+
+	body := client.ClientWriteRequest{
+		Writes: []client.ClientTupleKey{
+			{
+				User:     user,
+				Relation: relation,
+				Object:   object,
+			},
+		},
+	}
+
+	_, err := c.fga.
+		Write(ctx).
+		Body(body).
+		Execute()
+
+	if err != nil {
+		return fmt.Errorf(
+			"OpenFGA write tuple %s %s %s: %w",
+			user,
+			relation,
+			object,
+			err,
+		)
+	}
+
+	return nil
+}
+
+// DeleteTuple removes an OpenFGA relationship tuple.
+func (c *Client) DeleteTuple(
+	ctx context.Context,
+	user string,
+	relation string,
+	object string,
+) error {
+
+	body := client.ClientWriteRequest{
+		Deletes: []client.ClientTupleKeyWithoutCondition{
+			{
+				User:     user,
+				Relation: relation,
+				Object:   object,
+			},
+		},
+	}
+
+	_, err := c.fga.
+		Write(ctx).
+		Body(body).
+		Execute()
+
+	if err != nil {
+		return fmt.Errorf(
+			"OpenFGA delete tuple %s %s %s: %w",
+			user,
+			relation,
+			object,
+			err,
+		)
+	}
+
+	return nil
+}
+
+// CheckConnection verifies that OpenFGA is reachable.
 func (c *Client) CheckConnection(
 	ctx context.Context,
 ) error {

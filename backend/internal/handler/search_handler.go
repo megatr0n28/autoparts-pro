@@ -24,7 +24,7 @@ func NewSearchHandler(
 
 // SearchParts
 //
-// GET /api/v1/search/parts
+// GET /api/v1/parts/search
 //
 // Query params:
 // vehicle_id

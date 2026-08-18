@@ -15,7 +15,9 @@
         "relations": {
           "owner": {
             "directly_related_user_types": [
-              "user"
+              {
+                "type": "user"
+              }
             ]
           }
         }
@@ -26,8 +28,24 @@
       "relations": {
         "owner": {
           "this": {}
-        },
-        "viewer": {
+        }
+      },
+      "metadata": {
+        "relations": {
+          "owner": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "invoice",
+      "relations": {
+        "owner": {
           "this": {}
         }
       },
@@ -35,12 +53,9 @@
         "relations": {
           "owner": {
             "directly_related_user_types": [
-              "user"
-            ]
-          },
-          "viewer": {
-            "directly_related_user_types": [
-              "user"
+              {
+                "type": "user"
+              }
             ]
           }
         }
@@ -49,15 +64,17 @@
     {
       "type": "part_search",
       "relations": {
-        "viewer": {
+        "requester": {
           "this": {}
         }
       },
       "metadata": {
         "relations": {
-          "viewer": {
+          "requester": {
             "directly_related_user_types": [
-              "user"
+              {
+                "type": "user"
+              }
             ]
           }
         }

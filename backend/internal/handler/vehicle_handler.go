@@ -1,11 +1,11 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-
 	vehicleDomain "github.com/megatr0n28/autoparts-pro/backend/internal/domain/vehicle"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/dto"
 	vehicleService "github.com/megatr0n28/autoparts-pro/backend/internal/service/vehicle"
@@ -79,9 +79,12 @@ func (h *VehicleHandler) Create(
 			IsPrimary: request.IsPrimary,
 		}
 
+	userID := c.GetString("user_id")
+
 	err :=
 		h.service.Create(
 			c,
+			userID,
 			v,
 		)
 
@@ -107,6 +110,29 @@ func (h *VehicleHandler) List(
 	c *gin.Context,
 ) {
 
+	userIDValue, exists := c.Get("user_id")
+
+	fmt.Printf(
+		"VEHICLE AUTH DEBUG: user_id exists=%v value=%v\n",
+		exists,
+		userIDValue,
+	)
+
+	userID := c.GetString("user_id")
+
+	fmt.Printf(
+		"VEHICLE AUTH DEBUG: userID=%q\n",
+		userID,
+	)
+
+	customerIDValue, exists := c.Get("customer_id")
+
+	fmt.Printf(
+		"VEHICLE AUTH DEBUG: customer_id exists=%v value=%v\n",
+		exists,
+		customerIDValue,
+	)
+
 	customerID :=
 		uuid.MustParse(
 			c.GetString("customer_id"),
@@ -115,6 +141,7 @@ func (h *VehicleHandler) List(
 	vehicles, err :=
 		h.service.List(
 			c,
+			userID,
 			customerID,
 		)
 
@@ -150,9 +177,12 @@ func (h *VehicleHandler) Delete(
 			c.Param("id"),
 		)
 
+	userID := c.GetString("user_id")
+
 	err :=
 		h.service.Delete(
 			c,
+			userID,
 			id,
 			customerID,
 		)
@@ -186,9 +216,12 @@ func (h *VehicleHandler) SetPrimary(
 			c.Param("id"),
 		)
 
+	userID := c.GetString("user_id")
+
 	err :=
 		h.service.SetPrimary(
 			c,
+			userID,
 			id,
 			customerID,
 		)
@@ -270,9 +303,12 @@ func (h *VehicleHandler) Update(
 			State: request.State,
 		}
 
+	userID := c.GetString("user_id")
+
 	err :=
 		h.service.Update(
 			c,
+			userID,
 			id,
 			customerID,
 			v,

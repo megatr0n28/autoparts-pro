@@ -79,7 +79,7 @@ func JWTAuth(
 
 		c.Set(
 			"user_id",
-			userID,
+			userID.String(),
 		)
 		customer, err :=
 			customerRepo.FindByUserID(
