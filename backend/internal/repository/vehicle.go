@@ -9,6 +9,10 @@ import (
 )
 
 type VehicleRepository interface {
+	GetAll(
+		ctx context.Context,
+	) ([]vehicle.Vehicle, error)
+
 	Create(
 		ctx context.Context,
 		v *vehicle.Vehicle,

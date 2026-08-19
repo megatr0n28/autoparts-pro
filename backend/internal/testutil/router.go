@@ -30,6 +30,9 @@ func NewTestRouter() *gin.Engine {
 	dashboardHandler :=
 		NewDashboardHandler()
 
+	adminHandler :=
+		NewAdminHandler()
+
 	customerRepository :=
 		NewCustomerRepository()
 
@@ -43,6 +46,7 @@ func NewTestRouter() *gin.Engine {
 		customerHandler,
 		vehicleHandler,
 		dashboardHandler,
+		adminHandler,
 		customerRepository,
 		searchHandler,
 	)

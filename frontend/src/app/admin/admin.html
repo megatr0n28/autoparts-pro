@@ -1,0 +1,96 @@
+<div class="admin-container">
+  <div class="admin-heading">
+    <div>
+      <p class="eyebrow">Administration</p>
+      <h1>Control center</h1>
+      <p>Manage access and review the full customer, vehicle, and invoice workspace.</p>
+    </div>
+    <button mat-stroked-button type="button" (click)="loadOverview()">Refresh</button>
+  </div>
+
+  @if (loading()) {
+    <mat-card><mat-card-content><p>Loading admin data...</p></mat-card-content></mat-card>
+  } @else if (error()) {
+    <mat-card><mat-card-content><p>{{ error() }}</p></mat-card-content></mat-card>
+  } @else if (overview(); as data) {
+    <mat-tab-group>
+      <mat-tab label="Access">
+        <section class="tab-content">
+          <div class="section-heading">
+            <div>
+              <h2>Access management</h2>
+              <p>Change who can use administrative tools.</p>
+            </div>
+            <strong>{{ data.users.length }} users</strong>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th></tr></thead>
+              <tbody>
+                @for (user of data.users; track user.id) {
+                  <tr>
+                    <td>{{ user.first_name }} {{ user.last_name }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>
+                      <select [value]="user.role" [disabled]="updatingUserId() === user.id" (change)="updateRole(user, $any($event.target).value)">
+                        <option value="viewer">Viewer</option>
+                        <option value="editor">Editor</option>
+                        <option value="admin">Admin</option>
+                        <option value="user">Legacy User</option>
+                      </select>
+                    </td>
+                    <td>{{ user.active ? 'Active' : 'Inactive' }}</td>
+                    <td>{{ user.created_at | date:'mediumDate' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </mat-tab>
+
+      <mat-tab label="Vehicles">
+        <section class="tab-content">
+          <div class="section-heading"><div><h2>All vehicles</h2><p>Review every vehicle across customer profiles.</p></div><strong>{{ data.vehicles.length }} vehicles</strong></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Vehicle</th><th>VIN</th><th>Customer ID</th><th>Mileage</th><th>State</th><th>Actions</th></tr></thead>
+              <tbody>
+                @for (vehicle of data.vehicles; track vehicle.id) {
+                  <tr><td>{{ vehicle.year }} {{ vehicle.make }} {{ vehicle.model }}</td><td>{{ vehicle.vin || 'Not provided' }}</td><td>{{ vehicle.customer_id }}</td><td>{{ vehicle.mileage ?? 0 }}</td><td>{{ vehicle.state || 'Not provided' }}</td><td><a mat-button [routerLink]="['/admin/vehicles', vehicle.id, 'edit']">Edit</a></td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </mat-tab>
+
+      <mat-tab label="Customers">
+        <section class="tab-content">
+          <div class="section-heading"><div><h2>Customers</h2><p>Review customer profiles and contact details.</p></div><strong>{{ data.customers.length }} customers</strong></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Customer</th><th>Phone</th><th>Location</th><th>User ID</th><th>Actions</th></tr></thead>
+              <tbody>
+                @for (customer of data.customers; track customer.id) {
+                  <tr><td>{{ customer.first_name }} {{ customer.last_name }}</td><td>{{ customer.phone || 'Not provided' }}</td><td>{{ customer.city || 'Not provided' }}{{ customer.state ? ', ' + customer.state : '' }}</td><td>{{ customer.user_id }}</td><td><a mat-button [routerLink]="['/admin/customers', customer.id, 'edit']">Edit</a></td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </mat-tab>
+
+      <mat-tab label="Invoices">
+        <section class="tab-content invoice-empty">
+          <h2>Invoice management</h2>
+          @if (data.invoice_management_enabled) {
+            <p>{{ data.invoices.length }} invoices available.</p>
+          } @else {
+            <p>Invoice management is not available yet because this workspace has no invoice data model or API.</p>
+          }
+        </section>
+      </mat-tab>
+    </mat-tab-group>
+  }
+</div>

@@ -13,6 +13,16 @@ type MockCustomerRepository struct {
 	customers map[uuid.UUID]*customer.Customer
 }
 
+func (m *MockCustomerRepository) FindAll(
+	ctx context.Context,
+) ([]customer.Customer, error) {
+	customers := make([]customer.Customer, 0, len(m.customers))
+	for _, item := range m.customers {
+		customers = append(customers, *item)
+	}
+	return customers, nil
+}
+
 func NewCustomerRepository() repository.CustomerRepository {
 
 	return &MockCustomerRepository{

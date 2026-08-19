@@ -1,0 +1,27 @@
+<div class="admin-edit-container">
+  <mat-card>
+    <mat-card-header><mat-card-title>Admin: Edit Vehicle</mat-card-title></mat-card-header>
+    <mat-card-content>
+      @if (loading()) { <p>Loading vehicle...</p> }
+      @else if (error() && !vehicle) { <p>{{ error() }}</p> }
+      @else {
+        @if (error()) { <p>{{ error() }}</p> }
+        <form [formGroup]="form" (ngSubmit)="save()">
+          <mat-form-field><mat-label>Year</mat-label><input matInput type="number" formControlName="year" /></mat-form-field>
+          <mat-form-field><mat-label>Make</mat-label><input matInput formControlName="make" /></mat-form-field>
+          <mat-form-field><mat-label>Model</mat-label><input matInput formControlName="model" /></mat-form-field>
+          <mat-form-field><mat-label>Trim</mat-label><input matInput formControlName="trim" /></mat-form-field>
+          <mat-form-field><mat-label>Engine</mat-label><input matInput formControlName="engine" /></mat-form-field>
+          <mat-form-field><mat-label>Drivetrain</mat-label><input matInput formControlName="drivetrain" /></mat-form-field>
+          <mat-form-field><mat-label>Transmission</mat-label><input matInput formControlName="transmission" /></mat-form-field>
+          <mat-form-field><mat-label>Mileage</mat-label><input matInput type="number" formControlName="mileage" /></mat-form-field>
+          <mat-form-field><mat-label>Color</mat-label><input matInput formControlName="color" /></mat-form-field>
+          <mat-form-field><mat-label>VIN</mat-label><input matInput formControlName="vin" /></mat-form-field>
+          <mat-form-field><mat-label>License Plate</mat-label><input matInput formControlName="license_plate" /></mat-form-field>
+          <mat-form-field><mat-label>State</mat-label><input matInput formControlName="state" /></mat-form-field>
+          <div class="actions"><button mat-button type="button" (click)="cancel()">Cancel</button><button mat-raised-button color="primary" type="submit" [disabled]="saving()">{{ saving() ? 'Saving...' : 'Save Changes' }}</button></div>
+        </form>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>

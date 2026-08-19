@@ -47,6 +47,27 @@ export const routes: Routes = [
       },
 
       {
+        path: 'admin',
+        loadComponent: () =>
+          import('./admin/admin')
+            .then(m => m.AdminComponent),
+      },
+
+      {
+        path: 'admin/vehicles/:id/edit',
+        loadComponent: () =>
+          import('./admin/admin-vehicle-edit')
+            .then(m => m.AdminVehicleEditComponent),
+      },
+
+      {
+        path: 'admin/customers/:id/edit',
+        loadComponent: () =>
+          import('./admin/admin-customer-edit')
+            .then(m => m.AdminCustomerEditComponent),
+      },
+
+      {
         path: '',
         pathMatch: 'full',
         redirectTo: 'dashboard',

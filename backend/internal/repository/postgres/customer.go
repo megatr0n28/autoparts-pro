@@ -48,6 +48,14 @@ func (r *CustomerRepository) FindByUserID(
 
 }
 
+func (r *CustomerRepository) FindAll(
+	ctx context.Context,
+) ([]customer.Customer, error) {
+	var customers []customer.Customer
+	err := r.db.WithContext(ctx).Order("created_at DESC").Find(&customers).Error
+	return customers, err
+}
+
 func (r *CustomerRepository) Create(
 	ctx context.Context,
 	c *customer.Customer,

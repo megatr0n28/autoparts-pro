@@ -39,3 +39,7 @@ func NewDashboardHandler() *handler.DashboardHandler {
 	return handler.NewTestDashboardHandler()
 
 }
+
+func NewAdminHandler() *handler.AdminHandler {
+	return handler.NewTestAdminHandler()
+}

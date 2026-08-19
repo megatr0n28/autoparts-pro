@@ -19,3 +19,7 @@ func NewTestSearchHandler() *SearchHandler {
 func NewTestDashboardHandler() *DashboardHandler {
 	return &DashboardHandler{}
 }
+
+func NewTestAdminHandler() *AdminHandler {
+	return &AdminHandler{}
+}

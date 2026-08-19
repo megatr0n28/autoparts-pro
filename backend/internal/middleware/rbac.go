@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/megatr0n28/autoparts-pro/backend/internal/auth"
 )
 
 func RequireRole(
@@ -44,4 +45,18 @@ func RequireRole(
 
 	}
 
+}
+
+func RequireWriteAccess() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		role := c.GetString("role")
+		if !auth.CanModifyOwnData(role) {
+			c.AbortWithStatusJSON(
+				http.StatusForbidden,
+				gin.H{"error": "viewer accounts are read-only"},
+			)
+			return
+		}
+		c.Next()
+	}
 }

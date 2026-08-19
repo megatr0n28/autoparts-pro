@@ -9,6 +9,10 @@ import (
 )
 
 type CustomerRepository interface {
+	FindAll(
+		ctx context.Context,
+	) ([]customer.Customer, error)
+
 	FindByUserID(
 		ctx context.Context,
 		userID uuid.UUID,

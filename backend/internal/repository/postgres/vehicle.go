@@ -53,6 +53,14 @@ func (r *VehicleRepository) GetByID(
 	return &v, err
 }
 
+func (r *VehicleRepository) GetAll(
+	ctx context.Context,
+) ([]vehicle.Vehicle, error) {
+	var vehicles []vehicle.Vehicle
+	err := r.db.WithContext(ctx).Order("created_at DESC").Find(&vehicles).Error
+	return vehicles, err
+}
+
 func (r *VehicleRepository) GetByCustomer(
 	ctx context.Context,
 	customerID uuid.UUID,

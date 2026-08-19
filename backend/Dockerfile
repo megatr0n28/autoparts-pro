@@ -8,8 +8,11 @@ RUN go mod download
 
 COPY . .
 
+ENV GOMAXPROCS=1 \
+    GOMEMLIMIT=512MiB
+
 RUN CGO_ENABLED=0 GOOS=linux \
-    go build -p 1 -o autoparts-api ./cmd/api
+    go build -p 1 -gcflags=all=-l -o autoparts-api ./cmd/api
 
 
 FROM alpine:latest

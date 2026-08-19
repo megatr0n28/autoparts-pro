@@ -18,6 +18,7 @@ func New(
 	customerHandler *handler.CustomerHandler,
 	vehicleHandler *handler.VehicleHandler,
 	dashboardHandler *handler.DashboardHandler,
+	adminHandler *handler.AdminHandler,
 	customerRepository repository.CustomerRepository,
 	searchHandler *handler.SearchHandler,
 ) *gin.Engine {
@@ -124,6 +125,7 @@ func New(
 
 	protected.PUT(
 		"/customers/me",
+		middleware.RequireWriteAccess(),
 		customerHandler.Update,
 	)
 
@@ -134,6 +136,7 @@ func New(
 
 	vehicles.POST(
 		"",
+		middleware.RequireWriteAccess(),
 		vehicleHandler.Create,
 	)
 
@@ -144,16 +147,19 @@ func New(
 
 	vehicles.DELETE(
 		"/:id",
+		middleware.RequireWriteAccess(),
 		vehicleHandler.Delete,
 	)
 
 	vehicles.PATCH(
 		"/:id/primary",
+		middleware.RequireWriteAccess(),
 		vehicleHandler.SetPrimary,
 	)
 
 	vehicles.PUT(
 		"/:id",
+		middleware.RequireWriteAccess(),
 		vehicleHandler.Update,
 	)
 
@@ -199,6 +205,31 @@ func New(
 			)
 
 		},
+	)
+
+	admin.GET(
+		"/overview",
+		adminHandler.Overview,
+	)
+
+	admin.PUT(
+		"/users/:id/role",
+		adminHandler.UpdateUserRole,
+	)
+
+	admin.PUT(
+		"/vehicles/:id",
+		adminHandler.UpdateVehicle,
+	)
+
+	admin.DELETE(
+		"/vehicles/:id",
+		adminHandler.DeleteVehicle,
+	)
+
+	admin.PUT(
+		"/customers/:id",
+		adminHandler.UpdateCustomer,
 	)
 
 	//

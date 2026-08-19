@@ -150,6 +150,18 @@ func New() (*Application, error) {
 			dashboardService,
 		)
 
+	adminService :=
+		service.NewAdminService(
+			repositories.User,
+			repositories.Customer,
+			repositories.Vehicle,
+		)
+
+	adminHandler :=
+		handler.NewAdminHandler(
+			adminService,
+		)
+
 	// ----------------------------
 	// Search Providers
 	// ----------------------------
@@ -182,6 +194,7 @@ func New() (*Application, error) {
 		customerHandler,
 		vehicleHandler,
 		dashboardHandler,
+		adminHandler,
 		customerRepository,
 		searchHandler,
 	)

@@ -58,7 +58,7 @@ func (s *Service) Register(
 	u.PasswordHash = hash
 
 	if u.Role == "" {
-		u.Role = "user"
+		u.Role = string(RoleViewer)
 	}
 
 	err =
@@ -209,12 +209,15 @@ func (s *Service) Refresh(
 
 	}
 
-	access,
-		err :=
-		s.jwt.GenerateToken(
-			old.UserID.String(),
-			"user",
-		)
+	user, err := s.users.FindByID(ctx, old.UserID)
+	if err != nil {
+		return "", "", err
+	}
+
+	access, err := s.jwt.GenerateToken(
+		old.UserID.String(),
+		user.Role,
+	)
 
 	if err != nil {
 

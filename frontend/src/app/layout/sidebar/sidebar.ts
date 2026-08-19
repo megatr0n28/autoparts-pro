@@ -46,5 +46,10 @@ export class SidebarComponent {
       route: '/invoices',
       icon: 'receipt_long',
     },
+    {
+      label: 'Admin',
+      route: '/admin',
+      icon: 'admin_panel_settings',
+    },
   ];
 }
