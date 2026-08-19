@@ -23,6 +23,13 @@ export const routes: Routes = [
       },
 
       {
+        path: 'vehicles/:id/edit',
+        loadComponent: () =>
+          import('./vehicles/vehicle-edit/vehicle-edit')
+            .then(m => m.VehicleEditComponent),
+      },
+
+      {
         path: 'vehicles',
         component: VehicleListComponent,
       },
@@ -33,10 +40,16 @@ export const routes: Routes = [
       },
 
       {
-        path: '',
+        path: 'dashboard',
         loadComponent: () =>
           import('./dashboard/dashboard')
             .then(m => m.DashboardComponent),
+      },
+
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'dashboard',
       },
     ],
   },

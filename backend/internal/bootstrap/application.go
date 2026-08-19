@@ -69,18 +69,6 @@ func New() (*Application, error) {
 			cfg.JWT.RefreshExpiration,
 		)
 
-	authService :=
-		auth.NewService(
-			repositories.User,
-			jwtManager,
-			refreshService,
-			repositories.Customer,
-		)
-
-	authHandler := handler.NewAuthHandler(
-		authService,
-	)
-
 	openFGAClient, err := authz.New(
 		authz.Config{
 			APIURL:               cfg.OpenFGA.APIURL,
@@ -110,6 +98,19 @@ func New() (*Application, error) {
 			openFGAClient,
 		)
 
+	authService :=
+		auth.NewService(
+			repositories.User,
+			jwtManager,
+			refreshService,
+			repositories.Customer,
+			authorizer,
+		)
+
+	authHandler := handler.NewAuthHandler(
+		authService,
+	)
+
 	// ----------------------------
 	// Customer Service
 	// ----------------------------
@@ -135,6 +136,18 @@ func New() (*Application, error) {
 	vehicleHandler :=
 		handler.NewVehicleHandler(
 			vehicleService,
+		)
+
+	dashboardService :=
+		service.NewDashboardService(
+			customerService,
+			vehicleService,
+			authorizer,
+		)
+
+	dashboardHandler :=
+		handler.NewDashboardHandler(
+			dashboardService,
 		)
 
 	// ----------------------------
@@ -168,6 +181,7 @@ func New() (*Application, error) {
 		authHandler,
 		customerHandler,
 		vehicleHandler,
+		dashboardHandler,
 		customerRepository,
 		searchHandler,
 	)

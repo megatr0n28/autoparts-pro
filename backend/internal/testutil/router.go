@@ -27,6 +27,9 @@ func NewTestRouter() *gin.Engine {
 	vehicleHandler :=
 		NewVehicleHandler()
 
+	dashboardHandler :=
+		NewDashboardHandler()
+
 	customerRepository :=
 		NewCustomerRepository()
 
@@ -39,6 +42,7 @@ func NewTestRouter() *gin.Engine {
 		authHandler,
 		customerHandler,
 		vehicleHandler,
+		dashboardHandler,
 		customerRepository,
 		searchHandler,
 	)

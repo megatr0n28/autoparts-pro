@@ -23,6 +23,10 @@ import {
 } from '@angular/material/card';
 
 import {
+  MatButtonModule,
+} from '@angular/material/button';
+
+import {
   VehicleService,
 } from '../../core/services/vehicle.service';
 
@@ -33,6 +37,7 @@ import {
 
 import {
   ActivatedRoute,
+  RouterLink,
 } from '@angular/router';
 
 
@@ -46,6 +51,8 @@ import {
     CommonModule,
     MatTableModule,
     MatCardModule,
+    MatButtonModule,
+    RouterLink,
   ],
 
   templateUrl:
@@ -64,6 +71,10 @@ implements OnInit {
   dataSource =
     new MatTableDataSource<Vehicle>([]);
 
+  selectedVehicle: Vehicle | null = null;
+
+  private selectedVehicleId = '';
+
   success = '';
 
 
@@ -78,6 +89,8 @@ implements OnInit {
     'vin',
 
     'license_plate',
+
+    'actions',
 
   ];
 
@@ -98,6 +111,9 @@ implements OnInit {
     this.route.queryParams.subscribe(params => {
       this.success =
         params['message'] ?? '';
+      this.selectedVehicleId =
+        params['vehicleId'] ?? '';
+      this.selectVehicle();
     });
     this.loadVehicles();
   }
@@ -125,6 +141,8 @@ implements OnInit {
           this.dataSource.data =
             vehicles;
 
+          this.selectVehicle();
+
 
         },
 
@@ -143,6 +161,40 @@ implements OnInit {
       });
 
 
+  }
+
+  private selectVehicle(): void {
+    this.selectedVehicle =
+      this.dataSource.data.find(
+        vehicle => vehicle.id === this.selectedVehicleId,
+      ) ?? null;
+  }
+
+  deleteVehicle(vehicle: Vehicle): void {
+    const name = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+
+    if (!window.confirm(`Delete ${name}?`)) {
+      return;
+    }
+
+    this.vehicleService.deleteVehicle(vehicle.id).subscribe({
+      next: () => {
+        this.dataSource.data =
+          this.dataSource.data.filter(
+            current => current.id !== vehicle.id,
+          );
+
+        if (this.selectedVehicle?.id === vehicle.id) {
+          this.selectedVehicle = null;
+        }
+
+        this.success = 'Vehicle deleted successfully.';
+      },
+      error: err => {
+        this.success =
+          err.error?.error ?? 'Unable to delete vehicle.';
+      },
+    });
   }
 
 

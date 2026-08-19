@@ -1,6 +1,13 @@
-<h2>
-  Vehicles
-</h2>
+<div class="vehicles-header">
+  <h2>Vehicles</h2>
+  <a
+    mat-raised-button
+    color="primary"
+    routerLink="/vehicles/create"
+  >
+    Add Vehicle
+  </a>
+</div>
 
 <mat-card
   *ngIf="success"
@@ -15,6 +22,36 @@
   Vehicle count:
   {{ dataSource.data.length }}
 </p>
+
+<mat-card
+  *ngIf="selectedVehicle as vehicle"
+>
+  <mat-card-header>
+    <mat-card-title>
+      {{ vehicle.year }} {{ vehicle.make }} {{ vehicle.model }}
+    </mat-card-title>
+    <mat-card-subtitle>
+      Selected vehicle
+    </mat-card-subtitle>
+    <a
+      mat-button
+      [routerLink]="['/vehicles', vehicle.id, 'edit']"
+    >
+      Edit
+    </a>
+  </mat-card-header>
+
+  <mat-card-content>
+    <p>VIN: {{ vehicle.vin || 'Not provided' }}</p>
+    <p>Trim: {{ vehicle.trim || 'Not provided' }}</p>
+    <p>Engine: {{ vehicle.engine || 'Not provided' }}</p>
+    <p>Transmission: {{ vehicle.transmission || 'Not provided' }}</p>
+    <p>Mileage: {{ vehicle.mileage ?? 0 }}</p>
+    <p>Color: {{ vehicle.color || 'Not provided' }}</p>
+    <p>License plate: {{ vehicle.license_plate || 'Not provided' }}</p>
+    <p>State: {{ vehicle.state || 'Not provided' }}</p>
+  </mat-card-content>
+</mat-card>
 
 
 <!-- Temporary debug
@@ -128,6 +165,36 @@
 
   </ng-container>
 
+  <ng-container matColumnDef="actions">
+    <th
+      mat-header-cell
+      *matHeaderCellDef
+    >
+      Actions
+    </th>
+
+    <td
+      mat-cell
+      *matCellDef="let vehicle"
+    >
+      <button
+        mat-button
+        color="warn"
+        type="button"
+        (click)="$event.stopPropagation(); deleteVehicle(vehicle)"
+      >
+        Delete
+      </button>
+      <a
+        mat-button
+        [routerLink]="['/vehicles', vehicle.id, 'edit']"
+        (click)="$event.stopPropagation()"
+      >
+        Edit
+      </a>
+    </td>
+  </ng-container>
+
 
 
   <tr
@@ -143,6 +210,9 @@
       let row;
       columns: displayedColumns
     "
+    [routerLink]="['/vehicles']"
+    [queryParams]="{ vehicleId: row.id }"
+    class="vehicle-row"
   >
   </tr>
 

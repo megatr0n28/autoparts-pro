@@ -9,7 +9,7 @@ RUN go mod download
 COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux \
-    go build -o autoparts-api ./cmd/api
+    go build -p 1 -o autoparts-api ./cmd/api
 
 
 FROM alpine:latest

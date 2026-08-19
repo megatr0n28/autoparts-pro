@@ -50,6 +50,8 @@ func TestProtectedRoutesRequireJWT(t *testing.T) {
 
 			"/api/v1/customers/me",
 
+			"/api/v1/dashboard",
+
 			"/api/v1/vehicles",
 
 			"/api/v1/parts/search",

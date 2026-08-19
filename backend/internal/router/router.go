@@ -17,6 +17,7 @@ func New(
 	authHandler *handler.AuthHandler,
 	customerHandler *handler.CustomerHandler,
 	vehicleHandler *handler.VehicleHandler,
+	dashboardHandler *handler.DashboardHandler,
 	customerRepository repository.CustomerRepository,
 	searchHandler *handler.SearchHandler,
 ) *gin.Engine {
@@ -114,6 +115,11 @@ func New(
 	protected.GET(
 		"/customers/me",
 		customerHandler.Me,
+	)
+
+	protected.GET(
+		"/dashboard",
+		dashboardHandler.Get,
 	)
 
 	protected.PUT(

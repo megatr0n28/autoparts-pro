@@ -95,6 +95,31 @@ func (a *Authorizer) WriteTuple(
 	)
 }
 
+func (a *Authorizer) EnsureTuple(
+	ctx context.Context,
+	user string,
+	relation string,
+	object string,
+) error {
+	allowed, err := a.Check(ctx, user, relation, object)
+	if err != nil {
+		return err
+	}
+	if allowed {
+		return nil
+	}
+
+	if err := a.WriteTuple(ctx, user, relation, object); err != nil {
+		allowed, checkErr := a.Check(ctx, user, relation, object)
+		if checkErr == nil && allowed {
+			return nil
+		}
+		return err
+	}
+
+	return nil
+}
+
 func (a *Authorizer) CheckConnection(
 	ctx context.Context,
 ) error {

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/megatr0n28/autoparts-pro/backend/internal/authz"
 	"github.com/megatr0n28/autoparts-pro/backend/internal/domain/user"
 
 	"github.com/megatr0n28/autoparts-pro/backend/internal/repository"
@@ -15,9 +16,10 @@ import (
 type Service struct {
 	users repository.UserRepository
 
-	jwt       *JWTManager
-	refresh   *RefreshTokenService
-	customers repository.CustomerRepository
+	jwt        *JWTManager
+	refresh    *RefreshTokenService
+	customers  repository.CustomerRepository
+	authorizer *authz.Authorizer
 }
 
 func NewService(
@@ -25,13 +27,15 @@ func NewService(
 	jwt *JWTManager,
 	refresh *RefreshTokenService,
 	customers repository.CustomerRepository,
+	authorizer *authz.Authorizer,
 ) *Service {
 
 	return &Service{
-		users:     users,
-		jwt:       jwt,
-		refresh:   refresh,
-		customers: customers,
+		users:      users,
+		jwt:        jwt,
+		refresh:    refresh,
+		customers:  customers,
+		authorizer: authorizer,
 	}
 
 }
@@ -81,10 +85,14 @@ func (s *Service) Register(
 			Country: "USA",
 		}
 
-	return s.customers.Create(
+	if err := s.customers.Create(
 		ctx,
 		profile,
-	)
+	); err != nil {
+		return err
+	}
+
+	return s.writeCustomerOwnership(ctx, u.ID, profile.ID)
 
 }
 
@@ -141,7 +149,25 @@ func (s *Service) Login(
 			err
 	}
 
+	profile, err := s.customers.FindByUserID(ctx, u.ID)
+	if err != nil {
+		return "", "", err
+	}
+
+	if err := s.writeCustomerOwnership(ctx, u.ID, profile.ID); err != nil {
+		return "", "", err
+	}
+
 	return accessToken, refreshToken, nil
+}
+
+func (s *Service) writeCustomerOwnership(
+	ctx context.Context,
+	userID uuid.UUID,
+	customerID uuid.UUID,
+) error {
+	user, relation, object := authz.CustomerOwnerTuple(userID, customerID)
+	return s.authorizer.EnsureTuple(ctx, user, relation, object)
 }
 
 func (s *Service) Refresh(

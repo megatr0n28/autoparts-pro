@@ -21,6 +21,7 @@ import {
 import {
   Vehicle,
   CreateVehicleRequest,
+  UpdateVehicleRequest,
 } from '../models/vehicle.model';
 
 
@@ -58,6 +59,22 @@ export class VehicleService {
 
     );
 
+  }
+
+  deleteVehicle(id: string): Observable<void> {
+    return this.http.delete<void>(
+      `${this.api}/vehicles/${id}`,
+    );
+  }
+
+  updateVehicle(
+    id: string,
+    vehicle: UpdateVehicleRequest,
+  ): Observable<void> {
+    return this.http.put<void>(
+      `${this.api}/vehicles/${id}`,
+      vehicle,
+    );
   }
 
 }

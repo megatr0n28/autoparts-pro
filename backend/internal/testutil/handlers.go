@@ -33,3 +33,9 @@ func NewSearchHandler() *handler.SearchHandler {
 	return handler.NewTestSearchHandler()
 
 }
+
+func NewDashboardHandler() *handler.DashboardHandler {
+
+	return handler.NewTestDashboardHandler()
+
+}

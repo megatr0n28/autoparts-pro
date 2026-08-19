@@ -150,6 +150,46 @@ export class VehicleCreateComponent implements OnDestroy{
 
         ],
 
+        trim: [
+
+          '',
+
+        ],
+
+
+        engine: [
+
+          '',
+
+        ],
+
+
+        transmission: [
+
+          '',
+
+        ],
+
+
+        mileage: [
+
+          '',
+
+          [
+
+            Validators.min(0),
+
+          ],
+
+        ],
+
+
+        color: [
+
+          '',
+
+        ],
+
 
         vin: [
 
@@ -214,6 +254,12 @@ export class VehicleCreateComponent implements OnDestroy{
 
         Number(
           this.vehicleForm.value.year
+        ),
+
+      mileage:
+
+        Number(
+          this.vehicleForm.value.mileage || 0
         ),
 
     };

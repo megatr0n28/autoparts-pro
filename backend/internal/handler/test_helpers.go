@@ -15,3 +15,7 @@ func NewTestVehicleHandler() *VehicleHandler {
 func NewTestSearchHandler() *SearchHandler {
 	return &SearchHandler{}
 }
+
+func NewTestDashboardHandler() *DashboardHandler {
+	return &DashboardHandler{}
+}

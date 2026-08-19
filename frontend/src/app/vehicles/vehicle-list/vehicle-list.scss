@@ -1,0 +1,14 @@
+.vehicles-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+}
+
+.vehicle-row {
+	cursor: pointer;
+}
+
+.vehicle-row:hover {
+	background-color: rgba(0, 0, 0, 0.04);
+}

@@ -47,3 +47,18 @@ export interface CreateVehicleRequest {
   license_plate?: string;
 
 }
+
+export interface UpdateVehicleRequest {
+  year: number;
+  make: string;
+  model: string;
+  vin?: string;
+  trim?: string;
+  engine?: string;
+  drivetrain?: string;
+  transmission?: string;
+  mileage?: number;
+  color?: string;
+  license_plate?: string;
+  state?: string;
+}
