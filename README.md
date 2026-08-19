@@ -1,1177 +1,427 @@
 # Autoparts-Pro
-# Running AutoParts Pro with Docker
+
+A small, example auto parts inventory and search application. Autoparts-Pro is a Go (Gin) backend API with an Angular frontend, PostgreSQL for storage, Redis for cache/session data, and OpenFGA for authorization.
+
+This draft README focuses on a concise Quick Start, local development notes, configuration, testing, and troubleshooting to help contributors get productive quickly.
+
+---
+
+## Quick Start (Docker)
+
+Run the entire stack with Docker Compose (Compose v2):
+
+```bash
+# build and run everything
+docker compose up --build
+
+# or run detached
+docker compose up -d --build
+
+# stop and remove containers
+docker compose down
+
+# stop and remove containers and volumes (WARNING: deletes Postgres data)
+docker compose down -v
+```
+
+The API will be available at `http://localhost:8080` by default.
+
+---
 
 ## Prerequisites
 
-Before running AutoParts Pro with Docker, ensure you have:
+- Docker Desktop (with Compose v2)
+- Go 1.25+ (for running the backend locally)
+- Node 18+ / npm (for running the frontend locally)
 
-* Docker Desktop installed
-* Docker Compose v2 installed
-* Go 1.25+ installed (for local development)
-
-Verify Docker:
+Verify:
 
 ```bash
 docker --version
-
-docker-compose version
+docker compose version
+go version
+node --version
+npm --version
 ```
+
+> Note: This project prefers the `docker compose` (no hyphen) command provided by Compose v2. If you only have the legacy `docker-compose` binary, either upgrade or use the equivalent commands.
 
 ---
 
-# Docker Architecture
+## Ports & Services
 
-The Docker environment runs:
+- API: container `autoparts-api` -> host `:8080`
+- PostgreSQL: container `autoparts-postgres` -> host `:5432`
+- Redis: container `autoparts-redis` -> host `:6379`
+- OpenFGA (container): exposed on host `:8082` (dev only)
 
-| Service           | Container            | Port   | Purpose                 |
-| ----------------- | -------------------- | ------ | ----------------------- |
-| AutoParts Pro API | `autoparts-api`      | `8080` | Go Gin REST API         |
-| PostgreSQL        | `autoparts-postgres` | `5432` | Application database    |
-| Redis             | `autoparts-redis`    | `6379` | Cache / session storage |
-
-The services communicate using the Docker network:
-
-```
-autoparts-network
-```
+Inside Docker, use service hostnames (e.g. `postgres`, `redis`, `openfga`) rather than `localhost`.
 
 ---
 
-# Start the Application
+## Docker Compose Architecture
 
-From the project root:
+Below is a high-level architecture diagram for the Docker Compose setup showing how services communicate inside the `autoparts-network` and how the host/browser interacts with them.
+
+```mermaid
+flowchart LR
+    Browser["Browser / Host"]
+    Frontend["autoparts-frontend\n(Angular)\n:4200 or :80"]
+    API["autoparts-api\n(Go Gin)\n:8080"]
+    Postgres["autoparts-postgres\nPostgreSQL\n:5432"]
+    Redis["autoparts-redis\nRedis\n:6379"]
+    OpenFGA["openfga\nOpenFGA\n:8080 (container)\n:8082 (host)"]
+    Volumes["Volumes\n(postgres data, migrations)"]
+
+    subgraph "Docker Network (autoparts-network)"
+        Frontend
+        API
+        Postgres
+        Redis
+        OpenFGA
+    end
+
+    Browser -->|"HTTP (dev) :4200 / prod :80"| Frontend
+    Browser -->|"HTTP :8080"| API
+    Frontend -->|"HTTP API calls /api/v1"| API
+    API -->|"SQL (psql)"| Postgres
+    API -->|"Cache / session"| Redis
+    API -->|"Authorization (OpenFGA HTTP API)"| OpenFGA
+    Postgres -->|"Persisted data"| Volumes
+
+    classDef infra fill:#f3f4f6,stroke:#333,stroke-width:1px;
+    classDef db fill:#fffbeb,stroke:#b45309,stroke-width:1px;
+    classDef cache fill:#ecfeff,stroke:#0369a1,stroke-width:1px;
+
+    class Frontend,API,OpenFGA infra;
+    class Postgres db;
+    class Redis cache;
+```
+
+Notes:
+
+- The host can access services using published ports (API :8080, OpenFGA :8082 development, Postgres :5432, Redis :6379).
+- Containers should reference other services via Docker Compose service names (e.g. `postgres`, `redis`, `openfga`).
+- Persistent data (Postgres) is stored in Docker volumes mounted by the `autoparts-postgres` service.
+
+---
+
+## API Endpoints
+
+Common API endpoints exposed by the backend (prefix: `/api/v1`):
+
+- `GET /api/v1/health` — simple health check returning `{ "status": "ok" }`.
+- `POST /api/v1/auth/login` — authenticate user, returns JWT and refresh token.
+- `POST /api/v1/auth/refresh` — exchange refresh token for new access token.
+- `GET /api/v1/vehicles` — list vehicles for the authenticated user.
+- `GET /api/v1/vehicles/{id}` — fetch a single vehicle by ID.
+- `GET /api/v1/parts/search?vehicle_id={id}&query={q}` — search parts for a vehicle (used by the frontend).
+- `GET /api/v1/customers` — list customers (subject to auth/authorization).
+- `GET /api/v1/users` — list users (admin only in many setups).
+
+Notes:
+
+- Most endpoints require an Authorization header: `Authorization: Bearer <access_token>`.
+- Exact request/response shapes are defined in the `backend/internal` DTOs and handler code; consult the handlers in `backend/internal/handler` for details.
+- Authorization is enforced via OpenFGA policies — ensure the OpenFGA store and model IDs are configured in env/config.
+
+
+## Local Development
+
+Run the backend locally (outside Docker) for iterative development:
 
 ```bash
-docker-compose up --build
+cd backend
+# ensure your environment variables are set (see config section)
+go run ./cmd/api
 ```
 
-The first build will:
+Useful Make / Taskfile targets (see `backend/Makefile` or `Taskfile.yml`):
 
-1. Download Go dependencies
-2. Build the Go API binary
-3. Copy application configuration
-4. Copy database migrations
-5. Start PostgreSQL
-6. Start Redis
-7. Run database migrations
-8. Start the API server
+```bash
+# run tests
+cd backend && go test ./...
 
-Expected API startup:
-
+# build binary
+cd backend && go build ./cmd/api
 ```
-Loaded configuration: development
-AutoParts Pro API started
-Listening and serving HTTP on :8080
+
+## Frontend (local)
+
+Run the Angular frontend locally for iterative UI work:
+
+```bash
+cd frontend
+npm ci
+# start the dev server (Angular CLI)
+npm start
+# or with the Angular CLI directly
+npx ng serve --open
+
+# build production bundle
+npm run build
+```
+
+If the frontend needs to call the local API, update the API base URL in the frontend environment files (for example `frontend/src/environments/environment.ts`) to point to `http://localhost:8080` (or the API host you are using). The build output will be placed in `dist/` (e.g. `dist/<project-name>`).
+
+Frontend unit tests:
+
+```bash
+cd frontend
+npm test
+```
+
+Migrations are located in `backend/migrations`. To run migrations locally, use the project migration helper or psql when Postgres is available.
+
+---
+
+## Configuration & Environment
+
+Configuration defaults are in `backend/configs/development.yaml` and loaded via Viper. Important environment variables (overrides):
+
+- `DATABASE_HOST` (default: `postgres` when running with Docker)
+- `DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_NAME`
+- `REDIS_HOST` (default: `redis`)
+- `OPENFGA_APIURL` (container: `http://openfga:8080`), `OPENFGA_STOREID`, `OPENFGA_AUTHORIZATIONMODELID`
+- `JWT_SECRET` (production only)
+
+Example minimal env file for local Docker development (create `.env` or `docker-compose.override.yml`):
+
+```env
+DATABASE_HOST=postgres
+DATABASE_USER=postgres
+DATABASE_PASSWORD=postgres
+DATABASE_NAME=autoparts
+REDIS_HOST=redis
+OPENFGA_APIURL=http://openfga:8080
+OPENFGA_STOREID=01KZW369WB6CPEY6RBR42NWF1B
+OPENFGA_AUTHORIZATIONMODELID=01KZW3ZKH129S283DVN5JD501G
 ```
 
 ---
 
-# Run in Background
+## OpenFGA
 
-To start containers detached:
+The project integrates OpenFGA for fine-grained authorization. When running via Docker Compose the API container talks to OpenFGA at `http://openfga:8080`. From the host machine OpenFGA is reachable at `http://localhost:8082` (development). Do not use host `localhost` inside containers.
 
-```bash
-docker-compose up -d --build
-```
-
-View logs:
-
-```bash
-docker-compose logs -f api
-```
+OpenFGA config (development) lives in `backend/configs/development.yaml`. The OpenFGA client code is in `backend/internal/authz/openfga.go`.
 
 ---
 
-# Verify Container Health
+```mermaid
+flowchart LR
+    subgraph "Docker Network"
+        API["autoparts-api\n:8080"]
+        OpenFGA["openfga\n:8080"]
+        Postgres["autoparts-postgres\n:5432"]
+        Redis["autoparts-redis\n:6379"]
+    end
 
-Check running containers:
+    Browser["Host / Developer"] -->|"HTTP (dev) :8082"| OpenFGA
+    Browser -->|"HTTP :8080"| API
+    API -->|"gRPC/HTTP -> OpenFGA API"| OpenFGA
+    API -->|"SQL"| Postgres
+    API -->|"Cache"| Redis
+
+    classDef services fill:#f9f,stroke:#333,stroke-width:1px;
+    class API,OpenFGA,Postgres,Redis services;
+```
+
+### Quick OpenFGA verification (curl)
+
+Set these environment variables (replace values as needed):
 
 ```bash
-docker ps
+export OPENFGA_APIURL=http://localhost:8082
+export OPENFGA_STOREID=01KZW369WB6CPEY6RBR42NWF1B
+export OPENFGA_AUTHORIZATIONMODELID=01KZW3ZKH129S283DVN5JD501G
 ```
 
-Expected:
+- List stores (should include your `OPENFGA_STOREID`):
 
+```bash
+curl -s "$OPENFGA_APIURL/stores" | jq .
 ```
-NAME                  STATUS
 
-autoparts-postgres    Up (healthy)
+- Run a permission check against the store (example):
 
-autoparts-redis       Up (healthy)
-
-autoparts-api         Up (healthy)
+```bash
+curl -s -X POST "$OPENFGA_APIURL/stores/$OPENFGA_STOREID/check" \
+    -H "Content-Type: application/json" \
+    -d "{\"authorization_model_id\":\"$OPENFGA_AUTHORIZATIONMODELID\",\"tuple_key\":{\"object\":\"vehicle:vehicle-1\",\"relation\":\"viewer\",\"user\":\"user:alice\"}}" | jq .
 ```
+
+If the `allowed` field in the response is `true` the check passed for the given tuple; if `false`, the tuple is not present/allowed.
+
+### OpenFGA troubleshooting checklist
+
+1. Confirm OpenFGA is reachable from the API container:
+
+```bash
+docker exec -it autoparts-api curl -s --fail "$OPENFGA_APIURL/health" || echo "OpenFGA not reachable from API container"
+```
+
+2. Ensure the `OPENFGA_STOREID` appears in the stores list:
+
+```bash
+curl -s "$OPENFGA_APIURL/stores" | jq -r '.[].id' | grep "$OPENFGA_STOREID" || echo "Store not found"
+```
+
+3. Verify an authorization model id exists and matches `OPENFGA_AUTHORIZATIONMODELID` (inspect store models or use the OpenFGA tooling).
+
+4. Run the permission check example above and confirm `allowed` is `true` for a known tuple.
+
+5. Check API logs for OpenFGA-related errors:
+
+```bash
+docker compose logs -f api | grep -i openfga
+```
+
+### Validation script
+
+There is a small convenience script at `backend/scripts/validate_openfga.sh` that performs the checks above. It requires `curl` and optionally `jq` for nicer output.
 
 ---
 
-# API Health Check
+## Running Tests
 
-Verify the API:
+Backend unit tests (Go):
 
 ```bash
-curl http://localhost:8080/api/v1/health
+cd backend
+go test ./...
 ```
 
-Expected response:
+Frontend tests (Angular):
 
-```json
-{
-  "status": "ok"
-}
+```bash
+cd frontend
+npm ci
+npm test
 ```
 
----
-
-# Docker Smoke Test
-
-AutoParts Pro includes a Docker smoke test.
-
-Run:
+Docker smoke test (quick stack verify):
 
 ```bash
 ./backend/scripts/docker-smoke-test.sh
 ```
 
-Expected:
-
-```
-Checking API health...
-
-API healthy
-
-{"status":"ok"}
-
-Docker smoke test passed
-```
-
 ---
 
-# Stop the Application
+## Connecting to PostgreSQL
 
-Stop containers:
+You can connect to the Postgres instance in several ways depending on whether you are on the host or inside Docker.
 
-```bash
-docker-compose down
-```
-
-Remove containers and volumes:
+- From the host (when ports are published):
 
 ```bash
-docker-compose down -v
+# interactive psql using host/port
+psql -h localhost -p 5432 -U postgres -d autoparts
+
+# or using a connection URL
+psql "postgresql://postgres:postgres@localhost:5432/autoparts?sslmode=disable"
 ```
 
-**Warning:** Removing volumes deletes the PostgreSQL database data.
-
----
-
-# Rebuild After Code Changes
-
-Rebuild the API image:
+- From the Postgres container:
 
 ```bash
-docker-compose build api
+docker exec -it autoparts-postgres psql -U postgres -d autoparts
 ```
 
-Restart:
+- From another container on the same Docker network (e.g. the API container), use the service hostname `postgres`:
 
 ```bash
-docker-compose up
+# example: run psql inside the api container (if psql is available)
+docker exec -it autoparts-api sh -c 'psql postgresql://postgres:postgres@postgres:5432/autoparts'
 ```
 
-For a clean rebuild:
+Common `psql` commands:
 
-```bash
-docker-compose build --no-cache
-docker-compose up
-```
+- `\dt` — list tables
+- `\d <table>` — describe table schema
+- `\q` — quit
 
----
-
-# Environment Configuration
-
-The API loads configuration from:
+Connection string examples (env vars):
 
 ```
-backend/configs/development.yaml
-```
-
-Docker overrides configuration values using environment variables.
-
-Example:
-
-```yaml
-database:
-  host: postgres
-```
-
-Docker override:
-
-```yaml
 DATABASE_HOST=postgres
+DATABASE_USER=postgres
+DATABASE_PASSWORD=postgres
+DATABASE_NAME=autoparts
+DATABASE_URL=postgres://postgres:postgres@postgres:5432/autoparts?sslmode=disable
 ```
 
-Important Docker networking rules:
+## Connecting to Redis
 
-| Component  | Docker Hostname |
-| ---------- | --------------- |
-| PostgreSQL | `postgres`      |
-| Redis      | `redis`         |
-| API        | `api`           |
-
-Do not use `localhost` between containers.
-
----
-
-# Database Access
-
-Connect to PostgreSQL:
-
-```bash
-docker exec -it autoparts-postgres psql \
--U postgres \
--d autoparts
-```
-
-List tables:
-
-```sql
-\dt
-```
-
-Exit:
-
-```sql
-\q
-```
-
----
-
-# Redis Access
-
-Connect:
+- From the Redis container:
 
 ```bash
 docker exec -it autoparts-redis redis-cli
 ```
 
-Test:
+- From the host (when ports are published):
 
 ```bash
-ping
+redis-cli -h localhost -p 6379
 ```
 
-Expected:
+- Basic Redis commands to verify connectivity:
 
 ```
-PONG
+PING
+# expected: PONG
+SET foo bar
+GET foo
 ```
+
+- If Redis is configured with a password, provide it with `-a` or in the URL:
+
+```bash
+redis-cli -h localhost -p 6379 -a yourpassword
+# or redis://:yourpassword@localhost:6379/0
+```
+
+- From an application container, use the hostname `redis` and port `6379` (env vars):
+
+```
+REDIS_HOST=redis
+REDIS_PORT=6379
+# REDIS_PASSWORD=...
+```
+
+Warning: avoid `FLUSHALL` on production databases — it deletes all data.
 
 ---
 
-# Running Tests
+## Troubleshooting
 
-Run Go tests locally:
+- Database connection errors: ensure `autoparts-postgres` is running and that `DATABASE_HOST` matches the container hostname `postgres`.
+- Migrations: if migrations don't run on startup, run them manually using the migration helper or `psql` inside the Postgres container.
+- OpenFGA: if authorization checks fail, confirm `OPENFGA_APIURL` and `STOREID`/`AUTHORIZATIONMODELID` values in environment/config.
+- Port conflicts: ensure no local process occupies ports 8080/5432/6379.
+
+Helpful commands:
 
 ```bash
-cd backend
-
-go test ./...
-```
-
-Expected:
-
-```
-ok github.com/megatr0n28/autoparts-pro/backend/tests/smoke
-```
-
----
-## OpenFGA Authorization
-
-AutoParts Pro uses [OpenFGA](https://openfga.dev/) for fine-grained authorization.
-
-OpenFGA is responsible for determining whether a user has permission to access
-resources such as vehicles, customers, orders, and invoices.
-
-### OpenFGA Architecture
-
-When running with Docker Compose:
-
-```text
-                         Docker Network
-                              |
-             +----------------+----------------+
-             |                                 |
-             v                                 v
-       autoparts-api                       openfga
-          :8080                             :8080
-             |                                 ^
-             |                                 |
-             +---- http://openfga:8080 --------+
-```
----
-* The API container communicates with OpenFGA using:
-`http://openfga:8080`
-* From the host machine, OpenFGA is exposed through:
-http://localhost:8082
-* Do not use localhost:8082 from inside the API container.
-* Inside Docker, localhost refers to the API container itself. The Docker
-service name openfga must be used for container-to-container communication.
-#### OpenFGA Store
-The AutoParts Pro OpenFGA store is:
-```sh
-Store ID:
-01KZW369WB6CPEY6RBR42NWF1B
-```
-The current authorization model is:
-```sh
-Authorization Model ID:
-01KZW3ZKH129S283DVN5JD501G
-```
-These values are development environment configuration values.
-#### OpenFGA Configuration
-The OpenFGA configuration is defined in:
-```sh
-backend/internal/config/config.go
-```
-The configuration structure is:
-```go
-type OpenFGAConfig struct {
-    APIURL               string `mapstructure:"apiurl"`
-    StoreID              string `mapstructure:"storeid"`
-    AuthorizationModelID string `mapstructure:"authorizationmodelid"`
-}
-```
-The application configuration contains:
-```go
-type Config struct {
-    App      AppConfig      `mapstructure:"app"`
-    Log      LogConfig      `mapstructure:"log"`
-    Database DatabaseConfig `mapstructure:"database"`
-    Redis    RedisConfig    `mapstructure:"redis"`
-    JWT      JWTConfig      `mapstructure:"jwt"`
-    OpenFGA  OpenFGAConfig  `mapstructure:"openfga"`
-}
-```
-#### Development YAML Configuration
-The development configuration is located at:
-```sh
-backend/configs/development.yaml
-```
-The OpenFGA section should contain:
-```YAML
-openfga:
-  apiurl: "http://openfga:8080"
-  storeid: "01KZW369WB6CPEY6RBR42NWF1B"
-  authorizationmodelid: "01KZW3ZKH129S283DVN5JD501G"
-```
-#### Docker Environment Variables
-The API container receives the OpenFGA configuration through environment
-variables:
-```YAML
-OPENFGA_APIURL: http://openfga:8080
-OPENFGA_STOREID: 01KZW369WB6CPEY6RBR42NWF1B
-OPENFGA_AUTHORIZATIONMODELID: 01KZW3ZKH129S283DVN5JD501G
-```
-Viper maps these environment variables to the OpenFGA configuration using:
-```GO
-v.SetEnvKeyReplacer(
-    strings.NewReplacer(".", "_"),
-)
-
-v.AutomaticEnv()
-```
-Therefore:
-```text
-openfga.apiurl
-        |
-        +--> OPENFGA_APIURL
-
-openfga.storeid
-        |
-        +--> OPENFGA_STOREID
-
-openfga.authorizationmodelid
-        |
-        +--> OPENFGA_AUTHORIZATIONMODELID
-```
-#### OpenFGA Client
-The OpenFGA client is implemented in:
-```text
-backend/internal/authz/openfga.go
-```
-The client provides:
-```GO
-Check(
-    ctx context.Context,
-    user string,
-    relation string,
-    object string,
-)
-```
-for authorization checks.
-It also provides:
-```Go
-CheckConnection(
-    ctx context.Context,
-)
-```
-to verify connectivity to OpenFGA.
-The client is initialized during application startup.
-#### Verify OpenFGA
-Check the OpenFGA service:
-```bash
-curl http://localhost:8082/stores
-```
-A successful response should contain the AutoParts Pro store:
-```JSON
-{
-  "stores": [
-    {
-      "id": "01KZW369WB6CPEY6RBR42NWF1B",
-      "name": "autoparts-pro"
-    }
-  ],
-  "continuation_token": ""
-}
-```
-#### Verify Authorization Model
-List the authorization models:
-```bash
-curl \
-  "http://localhost:8082/stores/01KZW369WB6CPEY6RBR42NWF1B/authorization-models"
-```
-The response should contain:
-```text
-01KZW3ZKH129S283DVN5JD501G
-```
-as the current authorization model ID.
-
-#### Verify Docker Services
-Check the running services:
-```bash
-docker compose ps
-```
-Expected services include:
-```text
-autoparts-api
-autoparts-frontend
-autoparts-postgres
-autoparts-redis
-openfga
-```
-View API logs:
-```bash
+# view container logs
 docker compose logs -f api
-```
-View OpenFGA logs:
-```bash
-docker compose logs -f openfga
-```
-#### Rebuild After Configuration Changes
-After modifying OpenFGA configuration or Go source:
-```bash
-docker compose down
-docker compose up -d --build
-```
-Check the API:
-```bash
-curl http://localhost:8080/api/v1/health
-```
-Expected response:
-```json
-{
-  "status": "ok"
-}
-```
-Check OpenFGA:
-```bash
-curl http://localhost:8082/stores
-```
----
-## OpenFGA Troubleshooting
-```text
-relation "store" does not exist
-```
-If OpenFGA reports:
-```text
-ERROR: relation "store" does not exist
-```
-- OpenFGA is connected to a PostgreSQL database that has not been initialized
-with the OpenFGA schema.
-- The application database and OpenFGA database should not be treated as the
-same logical database unless OpenFGA has explicitly initialized its schema.
-- Check the OpenFGA PostgreSQL configuration and initialization.
----
-404 page not found on port 8080
-If:
-```bash
-curl http://localhost:8080/stores
-```
-returns:
-```text
-404 page not found
-```
-you are likely calling the AutoParts Pro API rather than OpenFGA.
-AutoParts Pro uses:
-```text
-localhost:8080
-```
-OpenFGA uses:
-```text
-localhost:8082
-```
----
-`Internal Server Error` from `/stores`
 
-If:
-```bash
-curl http://localhost:8081/stores
-```
-returns:
-```json
-{
-  "code": "internal_error",
-  "message": "Internal Server Error"
-}
-```
-verify that the request is using the correct OpenFGA HTTP port.
-
-OpenFGA's gRPC and HTTP ports are separate.
-
-The current host configuration uses:
-```text
-OpenFGA HTTP: localhost:8082
-OpenFGA gRPC: localhost:8081
-```
-The REST API should be tested with:
-```bash
-curl http://localhost:8082/stores
-```
----
-## Authorization Roadmap
-OpenFGA will eventually be used for relationships such as:
-```text
-user -> customer
-customer -> vehicle
-customer -> invoice
-customer -> order
-```
-For example:
-```text
-user:123
-    |
-    +-- owns --> vehicle:456
-```
-The application can then ask OpenFGA:
-```text
-Can user:123 view vehicle:456?
-```
-The expected authorization flow is:
-```text
-Angular Frontend
-       |
-       v
-AutoParts Pro API
-       |
-       v
-OpenFGA Authorization Check
-       |
-       +---- allowed ----> access resource
-       |
-       +---- denied ------> HTTP 403
-```
----
-The next implementation step is to define the AutoParts Pro authorization
-model and write the initial customer-to-vehicle ownership tuples.
-
-### One important README correction
-
-Your current ports should be documented as:
-```text
-| Service | Host | Container |
-|---|---:|---:|
-| AutoParts API | `8080` | `8080` |
-| OpenFGA HTTP | `8082` | `8080` |
-| OpenFGA gRPC | `8081` | `8081` |
-| PostgreSQL | `5432` | `5432` |
-| Redis | `6379` | `6379` |
-| Angular | `4200` | `4200` |
-```
-The **API → OpenFGA** connection is:
-
-```text
-http://openfga:8080
-```
-while your Mac → OpenFGA connection is:
-```text
-http://localhost:8082
-```
----
-## OpenFGA Vehicle Authorization
-
-AutoParts Pro uses OpenFGA to enforce vehicle ownership authorization.
-
-### Authorization Model
-
-The current authorization model includes:
-
-- `user`
-- `customer`
-- `vehicle`
-- `invoice`
-- `part_search`
-
-Vehicles use the `owner` relation.
-
-Example:
-
-```text
-user:54f38ddd-5a39-4bae-8408-29bf42b002d6
-    |
-    | owner
-    v
-vehicle:3b0449e5-e808-4d25-90a4-eb5ee9031768
-```
----
-An OpenFGA authorization check determines whether the authenticated user is allowed to access the vehicle.
-#### JWT Authentication Context
-The JWT authentication middleware validates the access token and places the following values into the Gin request context:
-```text
-user_id
-customer_id
-role
-```
-The `user_id` value is stored as a string so handlers and services can retrieve it with:
-```Go
-c.GetString("user_id")
-```
-The middleware also resolves the authenticated user's customer profile and stores:
-```Go
-c.Set("customer_id", customer.ID.String())
-```
-#### Vehicle Authorization
-Vehicle authorization uses the authenticated user's OpenFGA identity:
-```text
-user:<user_id>
-```
-and the vehicle resource:
-```text
-vehicle:<vehicle_id>
-```
-The ownership relationship is:
-```text
-user:<user_id> --owner--> vehicle:<vehicle_id>
-```
-### Step 6 Authorization Verification
-The OpenFGA authorization flow has been verified with two users.
-#### Authorized User
-The vehicle owner was checked against the vehicle:
-```json
-{
-  "tuple_key": {
-    "user": "user:54f38ddd-5a39-4bae-8408-29bf42b002d6",
-    "relation": "owner",
-    "object": "vehicle:3b0449e5-e808-4d25-90a4-eb5ee9031768"
-  }
-}
-```
-OpenFGA returned:
-```json
-{
-  "allowed": true,
-  "resolution": ""
-}
-```
-The authenticated user was also able to retrieve the vehicle through:
-```text
-GET /api/v1/vehicles
-```
-Response:
-```json
-[
-  {
-    "id": "3b0449e5-e808-4d25-90a4-eb5ee9031768",
-    "customer_id": "e9947891-e95c-4be2-bb14-64610665bda3",
-    "vin": "4T1BF1FK5MU123456",
-    "year": 2021,
-    "make": "Toyota",
-    "model": "Camry",
-    "license_plate": "TEST456",
-    "state": "DE",
-    "is_primary": false
-  }
-]
-```
-#### Unauthorized User
-A second test user was checked against the same vehicle.
-
-OpenFGA returned:
-```json
-{
-  "allowed": false,
-  "resolution": ""
-}
-```
-This confirms that OpenFGA denies ownership access when the authenticated user does not own the vehicle.
-
----
-# Troubleshooting
-
-## API cannot connect to PostgreSQL
-
-Check:
-
-```bash
-docker-compose ps
-```
-
-PostgreSQL should show:
-
-```
-healthy
-```
-
-View logs:
-
-```bash
-docker-compose logs postgres
+# run a Postgres psql shell
+docker exec -it autoparts-postgres psql -U postgres -d autoparts
 ```
 
 ---
 
-## Migration Error
+## Contributing
 
-Example:
+- Follow the preferred branch/PR workflow used by the project (feature branches, small PRs).
+- Run `go test ./...` and `npm test` before opening a PR.
+- Add or update migrations in `backend/migrations` to match schema changes.
 
-```
-failed to open source "file://migrations"
-```
-
-Verify the image contains migrations:
-
-```bash
-docker exec -it autoparts-api ls migrations
-```
+If you want, I can add a CONTRIBUTORS.md with a suggested workflow and checklist.
 
 ---
 
-## Configuration Error
+## License
 
-Example:
-
-```
-Config File "development" Not Found
-```
-
-Verify:
-
-```bash
-docker exec -it autoparts-api ls configs
-```
-
-Expected:
-
-```
-development.yaml
-production.yaml
-app.yaml
-```
-
----
-
-# Development Workflow
-
-Recommended workflow:
-
-1. Make code changes
-2. Run tests:
-
-```bash
-go test ./...
-```
-
-3. Rebuild Docker:
-
-```bash
-docker-compose build api
-```
-
-4. Restart:
-
-```bash
-docker-compose up
-```
-
-5. Run smoke test:
-
-```bash
-./backend/scripts/docker-smoke-test.sh
-```
-
----
-
-# Current Docker Support
-
-AutoParts Pro currently supports:
-
-* Go 1.25 Docker builds
-* PostgreSQL 17
-* Redis 7
-* Automated migrations
-* API health checks
-* Container health checks
-* Docker smoke testing
-
-
-# Troubleshooting Guide
-
-This section contains common issues encountered during AutoParts Pro backend development and their solutions.
-
----
-
-## PostgreSQL Troubleshooting
-
-## PostgreSQL Connection Refused
-
-#### Error
-```
-failed to connect to user=postgres database=
-localhost:5432: connect: connection refused
-```
-
-#### Cause
-
-PostgreSQL container is not running or API is pointing to the wrong database host.
-
-### Check running containers
-
-```bash
-docker ps
-```
-
-Expected
-```bash
-postgres
-5432->5432
-```
-
-Password Authentication Failed
-Error
-```bash
-FATAL: password authentication failed for user "postgres"
-```
-Verify credentials
-Check:
-```bash
-configs/development.yaml
-```
-Example:
-```bash
-database:
-  host: localhost
-  port: 5432
-  name: autoparts
-  user: postgres
-  password: postgres
-```
-Connected to Wrong Database
-Symptoms
-```bash
-\dt
-
-Did not find any relations.
-```
-Expected:
-```bash
-autoparts
-```
-If connected to:
-```bash
-postgres
-```
-switch:
-```bash
-\c autoparts
-```
-
-## Database Migration Troubleshooting
-Relation Already Exists
-#### Error
-```bash
-relation "customers" already exists
-```
-
-#### Cause
-- Migration was executed more than once.
-Check migrations
-```sql
-SELECT *
-FROM schema_migrations;
-```
-
-Check tables
-```sql
-\dt
-```
-If the database is disposable:
-```sql
-DROP DATABASE autoparts;
-CREATE DATABASE autoparts;
-```
-Then rerun migrations.
-
-## Docker PostgreSQL Access
-Enter PostgreSQL container:
-```bash
-docker exec -it autoparts-postgres psql -U postgres
-```
-Connect to AutoParts database:
-```sql
-\c autoparts
-```
-List tables:
-```sql
-\dt
-```
-
-## JWT Authentication Troubleshooting
-Invalid Token
-#### Error
-```bash
-{
- "error":"invalid token"
-}
-```
-#### Cause
-- Using placeholder token:
-```bash
-YOUR_ACCESS_TOKEN
-```
-instead of a real JWT.
-Login first:
-```bash
-curl -X POST \
-http://localhost:8080/api/v1/auth/login \
--H "Content-Type: application/json" \
--d '{
-"email":"admin@test.com",
-"password":"Password123"
-}'
-```
-Copy:
-```bash
-access_token
-```
-Use:
-```bash
-curl \
-http://localhost:8080/api/v1/users/me \
--H "Authorization: Bearer ACCESS_TOKEN"
-```
-
-## Refresh Token Troubleshooting
-Invalid Refresh Token
-#### Error
-```bash
-{
- "error":"invalid refresh token"
-}
-```
-
-Check stored tokens
-```sql
-SELECT
-id,
-user_id,
-token_hash,
-expires_at,
-revoked
-FROM refresh_tokens;
-```
-Refresh Token Immediately Revoked
-Symptoms
-Database shows:
-```
-revoked = true
-```
-or:
-```
-id = 00000000-0000-0000-0000-000000000000
-```
-#### Cause
-UUID was not generated.
-#### Fix
-Refresh token model must generate UUID:
-```go
-func (r *RefreshToken) BeforeCreate(
-tx *gorm.DB,
-) error {
-
-if r.ID == uuid.Nil {
-r.ID = uuid.New()
-}
-
-return nil
-}
-```
-
-Go Compilation Errors
-Undefined jwtManager
-#### Example:
-```
-undefined: jwtManager
-```
-#### Cause
-Dependency was not initialized before router creation.
-Verify:
-```
-bootstrap/application.go
-```
-Order should be:
-```
-Config
- |
-Logger
- |
-Database
- |
-Repositories
- |
-JWT Manager
- |
-Services
- |
-Handlers
- |
-Router
-```
-### Undefined Handler
-#### Example:
-```
-undefined: userHandler
-```
-#### Cause
-Handler was not created before passing to router.
-#### Example:
-```go
-userHandler :=
-handler.NewUserHandler()
-```
-
-## Import Collision Problems
-os/user.User Error
-#### Example:
-```
-unknown field FirstName in struct literal of type os/user.User
-```
-#### Cause
-Wrong package imported.
-Incorrect:
-```go
-import "os/user"
-```
-Correct:
-```go
-import domainUser "github.com/megatr0n28/autoparts-pro/backend/internal/domain/user"
-```
-
-## Gin Troubleshooting
-API Starts But curl Fails
-#### Error
-```
-curl: Failed to connect to localhost port 8080
-```
-Check API process
-```bash
-go run ./cmd/api
-```
-Expected:
-```
-AutoParts Pro API started
-```
-Check port:
-```bash
-lsof -i :8080
-```
-
-## Customer Profile Troubleshooting
-Customer Profile Not Found
-#### Response
-```json
-{
-"error":"customer profile not found"
-}
-```
-#### Cause
-User exists but profile was created before automatic profile creation was added.
-Verify:
-```sql
-SELECT *
-FROM customer_profiles;
-```
-
-## Configuration Troubleshooting
-Loaded Configuration
-Startup should show:
-```
-Loaded configuration: development
-```
-Configuration files:
-```
-configs/
-├── development.yaml
-└── production.yaml
-```
-Environment override:
-```bash
-export APP_ENV=production
-```
-
-## Git Troubleshooting
-Check changes:
-```bash
-git status
-```
-Commit:
-```bash
-git add .
-
-git commit -m "message"
-
-git push origin main
-```
-View history:
-```bash
-git log --oneline
-```
-
-## Recommended Debug Checklist
-When the API fails:
-1. Verify PostgreSQL is running
-```bash
-docker ps
-```
-2. Verify database
-```sql
-SELECT current_database();
-```
-3. Verify migrations
-```sql
-\dt
-```
-4. Start API
-```bash
-go run ./cmd/api
-```
-5. Test health endpoint
-```bash
-curl http://localhost:8080/api/v1/health
-```
-6. Login
-```bash
-curl -X POST /api/v1/auth/login
-```
-7. Test protected endpoint
-```bash
-curl /api/v1/users/me
-```
+See the `LICENSE` file in the project root.
