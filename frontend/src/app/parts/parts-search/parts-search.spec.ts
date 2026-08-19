@@ -332,4 +332,60 @@ describe('PartsSearch', () => {
     }
   );
 
+  it('should sort search results by price', () => {
+
+    component.selectedVehicle = vehicle.id;
+    component.searchQuery = 'oil filter';
+
+    component.search();
+
+    const request =
+      httpTestingController.expectOne(
+        req =>
+          req.url.includes(
+            '/api/v1/parts/search'
+          )
+      );
+
+    request.flush({
+      results: [
+        searchResults[1],
+        searchResults[0],
+      ],
+    });
+
+    expect(
+      component.results[0]
+    ).toEqual(
+      searchResults[0]
+    );
+
+    expect(
+      component.results[1]
+    ).toEqual(
+      searchResults[1]
+    );
+
+  });
+
+
+  it('should identify the best price', () => {
+
+    component.results =
+      searchResults;
+
+    expect(
+      component.isBestPrice(
+        searchResults[0]
+      )
+    ).toBe(true);
+
+    expect(
+      component.isBestPrice(
+        searchResults[1]
+      )
+    ).toBe(false);
+
+  });
+
 });

@@ -2,55 +2,66 @@
 
   <h2>Search Parts</h2>
 
-  <mat-form-field appearance="outline">
-    <mat-label>Vehicle</mat-label>
 
-    <mat-select
-      [(ngModel)]="selectedVehicle"
+  <div class="search-form">
+
+    <mat-form-field appearance="outline">
+
+      <mat-label>
+        Vehicle
+      </mat-label>
+
+      <mat-select
+        [(ngModel)]="selectedVehicle"
+      >
+
+        @for (
+          vehicle of vehicles;
+          track vehicle.id
+        ) {
+
+          <mat-option
+            [value]="vehicle.id"
+          >
+            {{ vehicle.year }}
+            {{ vehicle.make }}
+            {{ vehicle.model }}
+          </mat-option>
+
+        }
+
+      </mat-select>
+
+    </mat-form-field>
+
+
+    <mat-form-field appearance="outline">
+
+      <mat-label>
+        Part Search
+      </mat-label>
+
+      <input
+        matInput
+        [(ngModel)]="searchQuery"
+        placeholder="Brake pads"
+        (keyup.enter)="search()"
+      />
+
+    </mat-form-field>
+
+
+    <button
+      mat-raised-button
+      color="primary"
+      type="button"
+      (click)="search()"
+      [disabled]="loading"
     >
+      {{ loading ? 'Searching...' : 'Search' }}
+    </button>
 
-      @for (vehicle of vehicles; track vehicle.id) {
-
-        <mat-option [value]="vehicle.id">
-
-          {{ vehicle.year }}
-          {{ vehicle.make }}
-          {{ vehicle.model }}
-
-        </mat-option>
-
-      }
-
-    </mat-select>
-
-  </mat-form-field>
-
-
-  <mat-form-field appearance="outline">
-
-    <mat-label>Part Search</mat-label>
-
-    <input
-      matInput
-      [(ngModel)]="searchQuery"
-      placeholder="Brake pads"
-      (keyup.enter)="search()"
-    />
-
-  </mat-form-field>
-
-
-  <button
-    mat-raised-button
-    color="primary"
-    type="button"
-    (click)="search()"
-    [disabled]="loading"
-  >
-
-    {{ loading ? 'Searching...' : 'Search' }}
-
-  </button>
+  </div>
 
 
   @if (error) {
@@ -61,7 +72,34 @@
 
   }
 
-  @if (!loading && results.length > 0) {
+
+  @if (loading) {
+
+    <div class="loading-message">
+      Searching for parts...
+    </div>
+
+  }
+
+
+  @if (
+    !loading &&
+    searched &&
+    results.length > 0
+  ) {
+
+    <div class="results-header">
+
+      <h3>
+        Search Results
+      </h3>
+
+      <span>
+        {{ getResultCountLabel() }}
+      </span>
+
+    </div>
+
 
     <div class="results-container">
 
@@ -84,7 +122,26 @@
             mat-cell
             *matCellDef="let part"
           >
-            {{ part.name }}
+            <div class="part-name">
+              {{ part.name }}
+
+              @if (isBestPrice(part)) {
+
+                <span class="best-price">
+                  Best Price
+                </span>
+
+              }
+            </div>
+
+            @if (part.description) {
+
+              <div class="part-description">
+                {{ part.description }}
+              </div>
+
+            }
+
           </td>
 
         </ng-container>
@@ -160,7 +217,9 @@
             mat-cell
             *matCellDef="let part"
           >
-            {{ part.price | currency }}
+            <strong>
+              {{ part.price | currency:part.currency }}
+            </strong>
           </td>
 
         </ng-container>
@@ -179,7 +238,54 @@
             mat-cell
             *matCellDef="let part"
           >
-            {{ part.in_stock ? 'In Stock' : 'Out of Stock' }}
+
+            @if (part.in_stock) {
+
+              <span class="in-stock">
+                In Stock
+              </span>
+
+            } @else {
+
+              <span class="out-of-stock">
+                Out of Stock
+              </span>
+
+            }
+
+          </td>
+
+        </ng-container>
+
+
+        <ng-container matColumnDef="actions">
+
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+          >
+            Action
+          </th>
+
+          <td
+            mat-cell
+            *matCellDef="let part"
+          >
+
+            @if (part.product_url) {
+
+              <a
+                mat-button
+                color="primary"
+                [href]="part.product_url"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View Part
+              </a>
+
+            }
+
           </td>
 
         </ng-container>
@@ -208,13 +314,16 @@
 
   @if (
     !loading &&
+    searched &&
     !error &&
-    searchQuery &&
     results.length === 0
   ) {
 
     <div class="no-results">
-      No parts found for this search.
+
+      No parts found for
+      "{{ searchQuery.trim() }}".
+
     </div>
 
   }

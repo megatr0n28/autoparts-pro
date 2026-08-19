@@ -1,5 +1,4 @@
 import {
-  ChangeDetectorRef,
   Component,
   OnInit,
 } from '@angular/core';
@@ -75,6 +74,8 @@ export class PartsSearchComponent implements OnInit {
 
   error = '';
 
+  searched = false;
+
   displayedColumns = [
     'name',
     'retailer',
@@ -82,13 +83,13 @@ export class PartsSearchComponent implements OnInit {
     'part_number',
     'price',
     'availability',
+    'actions',
   ];
 
 
   constructor(
     private vehicleService: VehicleService,
     private partService: PartService,
-    private cdr: ChangeDetectorRef,
   ) {}
 
 
@@ -98,8 +99,6 @@ export class PartsSearchComponent implements OnInit {
 
 
   loadVehicles(): void {
-
-    this.error = '';
 
     this.vehicleService
       .getVehicles()
@@ -120,8 +119,6 @@ export class PartsSearchComponent implements OnInit {
 
           this.error =
             'Unable to load vehicles. Please log in again.';
-
-          this.cdr.detectChanges();
         },
 
       });
@@ -133,6 +130,8 @@ export class PartsSearchComponent implements OnInit {
     this.error = '';
 
     this.results = [];
+
+    this.searched = false;
 
 
     if (!this.selectedVehicle) {
@@ -170,11 +169,15 @@ export class PartsSearchComponent implements OnInit {
         next: data => {
 
           this.results =
-            data ?? [];
+            [...(data ?? [])]
+              .sort(
+                (a, b) =>
+                  a.price - b.price
+              );
 
           this.loading = false;
 
-          this.cdr.detectChanges();
+          this.searched = true;
         },
 
 
@@ -193,9 +196,37 @@ export class PartsSearchComponent implements OnInit {
 
           this.loading = false;
 
-          this.cdr.detectChanges();
+          this.searched = true;
         },
 
       });
+  }
+
+
+  isBestPrice(
+    part: PartSearchResult,
+  ): boolean {
+
+    if (!this.results.length) {
+      return false;
+    }
+
+    return part.price ===
+      Math.min(
+        ...this.results.map(
+          result => result.price
+        )
+      );
+  }
+
+
+  getResultCountLabel(): string {
+
+    const count =
+      this.results.length;
+
+    return count === 1
+      ? '1 part found'
+      : `${count} parts found`;
   }
 }

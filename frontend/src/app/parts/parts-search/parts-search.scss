@@ -1,40 +1,81 @@
+.parts-search {
+  padding: 24px;
+}
+
 .search-form {
   display: flex;
-  gap: 16px;
   align-items: center;
+  gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 24px;
 }
 
-.search-status {
+.search-form mat-form-field {
+  min-width: 260px;
+}
+
+.error-message {
   margin: 16px 0;
-}
-
-.results {
-  margin-top: 20px;
-}
-
-.part-result {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 16px;
-  background: #fff;
-}
-
-.part-result h4 {
-  margin-top: 0;
-  margin-bottom: 12px;
-}
-
-.part-result p {
-  margin: 6px 0;
-}
-
-.error {
-  margin: 16px 0;
-  padding: 12px;
-  border-radius: 6px;
+  padding: 12px 16px;
+  border-radius: 4px;
   background: #ffebee;
-  color: #b71c1c;
+}
+
+.loading-message {
+  margin: 16px 0;
+  font-style: italic;
+}
+
+.results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 24px 0 12px;
+}
+
+.results-header h3 {
+  margin: 0;
+}
+
+.results-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+}
+
+.part-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.part-description {
+  margin-top: 4px;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.best-price {
+  display: inline-block;
+  padding: 3px 7px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.in-stock {
+  font-weight: 500;
+}
+
+.out-of-stock {
+  font-weight: 500;
+}
+
+.no-results {
+  margin-top: 24px;
+  padding: 24px;
+  text-align: center;
 }
