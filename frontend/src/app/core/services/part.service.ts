@@ -46,49 +46,26 @@ export class PartService {
 
 
   searchParts(
-
     vehicleId: string,
-
     query: string,
-
   ): Observable<PartSearchResult[]> {
 
-
-    const params =
-
-      new HttpParams()
-
-        .set(
-          'vehicle_id',
-          vehicleId
-        )
-
-        .set(
-          'query',
-          query
-        );
-
+    const params = new HttpParams()
+      .set('vehicle_id', vehicleId)
+      .set('query', query);
 
     return this.http
-
       .get<PartSearchResponse>(
-
-        `${this.api}/search/parts`,
-
+        `${this.api}/parts/search`,
         {
           params,
         }
-
       )
-
       .pipe(
-
         map(response =>
           response.results ?? []
         )
-
       );
-
   }
 
 }

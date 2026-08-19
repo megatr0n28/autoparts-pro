@@ -1,74 +1,51 @@
-<h2>
-  Search Parts
-</h2>
+<div class="parts-search">
 
+  <h2>Search Parts</h2>
 
-<div class="search-form">
-
-
-  <mat-form-field>
-
-    <mat-label>
-      Vehicle
-    </mat-label>
-
+  <mat-form-field appearance="outline">
+    <mat-label>Vehicle</mat-label>
 
     <mat-select
       [(ngModel)]="selectedVehicle"
     >
 
-      <mat-option
-        *ngFor="let vehicle of vehicles"
-        [value]="vehicle.id"
-      >
+      @for (vehicle of vehicles; track vehicle.id) {
 
-        {{ vehicle.year }}
-        {{ vehicle.make }}
-        {{ vehicle.model }}
+        <mat-option [value]="vehicle.id">
 
-      </mat-option>
+          {{ vehicle.year }}
+          {{ vehicle.make }}
+          {{ vehicle.model }}
+
+        </mat-option>
+
+      }
 
     </mat-select>
 
   </mat-form-field>
 
 
+  <mat-form-field appearance="outline">
 
-  <mat-form-field>
-
-    <mat-label>
-      Part Search
-    </mat-label>
-
+    <mat-label>Part Search</mat-label>
 
     <input
-
       matInput
-
       [(ngModel)]="searchQuery"
-
       placeholder="Brake pads"
-
       (keyup.enter)="search()"
-
     />
 
   </mat-form-field>
 
 
-
   <button
-
     mat-raised-button
-
     color="primary"
-
     type="button"
-
     (click)="search()"
-
     [disabled]="loading"
-
   >
 
     {{ loading ? 'Searching...' : 'Search' }}
@@ -76,269 +53,170 @@
   </button>
 
 
-</div>
+  @if (error) {
 
+    <div class="error-message">
+      {{ error }}
+    </div>
 
+  }
 
-<!-- Error -->
+  @if (!loading && results.length > 0) {
 
-<p
-  class="error"
-  *ngIf="error"
->
+    <div class="results-container">
 
-  {{ error }}
-
-</p>
-
-
-
-<!-- Loading -->
-
-<p
-  *ngIf="loading"
->
-
-  Searching...
-
-</p>
-
-
-
-<!-- Results -->
-
-<div
-  *ngIf="!loading && results.length > 0"
->
-
-  <h3>
-    Search Results
-  </h3>
-
-
-  <p>
-    Found {{ results.length }} result(s).
-  </p>
-
-
-  <table
-
-    mat-table
-
-    [dataSource]="results"
-
-    class="mat-elevation-z2"
-
-  >
-
-
-    <ng-container
-      matColumnDef="name"
-    >
-
-      <th
-        mat-header-cell
-        *matHeaderCellDef
+      <table
+        mat-table
+        [dataSource]="results"
+        class="mat-elevation-z2"
       >
 
-        Part
+        <ng-container matColumnDef="name">
 
-      </th>
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+          >
+            Part
+          </th>
 
+          <td
+            mat-cell
+            *matCellDef="let part"
+          >
+            {{ part.name }}
+          </td>
 
-      <td
-        mat-cell
-        *matCellDef="let part"
-      >
+        </ng-container>
 
-        {{ part.name }}
 
-      </td>
+        <ng-container matColumnDef="retailer">
 
-    </ng-container>
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+          >
+            Retailer
+          </th>
 
+          <td
+            mat-cell
+            *matCellDef="let part"
+          >
+            {{ part.retailer }}
+          </td>
 
+        </ng-container>
 
-    <ng-container
-      matColumnDef="retailer"
-    >
 
-      <th
-        mat-header-cell
-        *matHeaderCellDef
-      >
+        <ng-container matColumnDef="brand">
 
-        Retailer
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+          >
+            Brand
+          </th>
 
-      </th>
+          <td
+            mat-cell
+            *matCellDef="let part"
+          >
+            {{ part.brand }}
+          </td>
 
+        </ng-container>
 
-      <td
-        mat-cell
-        *matCellDef="let part"
-      >
 
-        {{ part.retailer }}
+        <ng-container matColumnDef="part_number">
 
-      </td>
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+          >
+            Part #
+          </th>
 
-    </ng-container>
+          <td
+            mat-cell
+            *matCellDef="let part"
+          >
+            {{ part.part_number }}
+          </td>
 
+        </ng-container>
 
 
-    <ng-container
-      matColumnDef="brand"
-    >
+        <ng-container matColumnDef="price">
 
-      <th
-        mat-header-cell
-        *matHeaderCellDef
-      >
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+          >
+            Price
+          </th>
 
-        Brand
+          <td
+            mat-cell
+            *matCellDef="let part"
+          >
+            {{ part.price | currency }}
+          </td>
 
-      </th>
+        </ng-container>
 
 
-      <td
-        mat-cell
-        *matCellDef="let part"
-      >
+        <ng-container matColumnDef="availability">
 
-        {{ part.brand }}
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+          >
+            Availability
+          </th>
 
-      </td>
+          <td
+            mat-cell
+            *matCellDef="let part"
+          >
+            {{ part.in_stock ? 'In Stock' : 'Out of Stock' }}
+          </td>
 
-    </ng-container>
+        </ng-container>
 
 
+        <tr
+          mat-header-row
+          *matHeaderRowDef="displayedColumns"
+        ></tr>
 
-    <ng-container
-      matColumnDef="part_number"
-    >
 
-      <th
-        mat-header-cell
-        *matHeaderCellDef
-      >
+        <tr
+          mat-row
+          *matRowDef="
+            let row;
+            columns: displayedColumns
+          "
+        ></tr>
 
-        Part #
+      </table>
 
-      </th>
+    </div>
 
+  }
 
-      <td
-        mat-cell
-        *matCellDef="let part"
-      >
 
-        {{ part.part_number }}
-
-      </td>
-
-    </ng-container>
-
-
-
-    <ng-container
-      matColumnDef="price"
-    >
-
-      <th
-        mat-header-cell
-        *matHeaderCellDef
-      >
-
-        Price
-
-      </th>
-
-
-      <td
-        mat-cell
-        *matCellDef="let part"
-      >
-
-        {{ part.price | currency }}
-
-      </td>
-
-    </ng-container>
-
-
-
-    <ng-container
-      matColumnDef="availability"
-    >
-
-      <th
-        mat-header-cell
-        *matHeaderCellDef
-      >
-
-        Availability
-
-      </th>
-
-
-      <td
-        mat-cell
-        *matCellDef="let part"
-      >
-
-        {{ part.in_stock
-          ? 'In Stock'
-          : 'Out of Stock'
-        }}
-
-      </td>
-
-    </ng-container>
-
-
-
-    <tr
-
-      mat-header-row
-
-      *matHeaderRowDef="
-        displayedColumns
-      "
-
-    ></tr>
-
-
-    <tr
-
-      mat-row
-
-      *matRowDef="
-        let row;
-        columns: displayedColumns
-      "
-
-    ></tr>
-
-
-  </table>
-
-</div>
-
-
-
-<!-- No results -->
-
-<p
-
-  *ngIf="
+  @if (
     !loading &&
     !error &&
     searchQuery &&
     results.length === 0
-  "
+  ) {
 
->
+    <div class="no-results">
+      No parts found for this search.
+    </div>
 
-  No parts found for this search.
+  }
 
-</p>
+</div>

@@ -28,7 +28,7 @@ export const routes: Routes = [
       },
 
       {
-        path: 'parts',
+        path: 'parts/search',
         component: PartsSearchComponent,
       },
 

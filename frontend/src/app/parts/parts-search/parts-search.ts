@@ -1,4 +1,5 @@
 import {
+  ChangeDetectorRef,
   Component,
   OnInit,
 } from '@angular/core';
@@ -45,145 +46,89 @@ import {
 
 
 @Component({
-
   selector: 'app-parts-search',
-
   standalone: true,
 
   imports: [
-
     CommonModule,
-
     FormsModule,
-
     MatInputModule,
-
     MatButtonModule,
-
     MatSelectModule,
-
     MatTableModule,
-
   ],
 
-  templateUrl:
-    './parts-search.html',
-
-  styleUrl:
-    './parts-search.scss',
-
+  templateUrl: './parts-search.html',
+  styleUrl: './parts-search.scss',
 })
-
-
-export class PartsSearchComponent
-implements OnInit {
-
+export class PartsSearchComponent implements OnInit {
 
   vehicles: Vehicle[] = [];
-
 
   selectedVehicle = '';
 
   searchQuery = '';
 
-
   results: PartSearchResult[] = [];
-
 
   loading = false;
 
   error = '';
 
-
   displayedColumns = [
-
     'name',
-
     'retailer',
-
     'brand',
-
     'part_number',
-
     'price',
-
     'availability',
-
   ];
 
 
   constructor(
-
-    private vehicleService:
-      VehicleService,
-
-    private partService:
-      PartService,
-
+    private vehicleService: VehicleService,
+    private partService: PartService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
 
   ngOnInit(): void {
-
-    console.log(
-      'PartsSearchComponent INIT'
-    );
-
     this.loadVehicles();
-
   }
 
 
   loadVehicles(): void {
 
-    console.log(
-      'LOADING VEHICLES'
-    );
-
+    this.error = '';
 
     this.vehicleService
-
       .getVehicles()
-
       .subscribe({
 
         next: data => {
-
-          console.log(
-            'VEHICLES LOADED',
-            data
-          );
-
-
-          this.vehicles = data;
-
+          this.vehicles = data ?? [];
         },
-
 
         error: err => {
 
           console.error(
-            'VEHICLE LOAD ERROR',
-            err
+            'Vehicle load error',
+            err,
           );
 
+          this.vehicles = [];
 
           this.error =
             'Unable to load vehicles. Please log in again.';
 
+          this.cdr.detectChanges();
         },
 
       });
-
   }
 
 
   search(): void {
-
-    console.log(
-      'SEARCH BUTTON CLICKED'
-    );
-
 
     this.error = '';
 
@@ -196,108 +141,61 @@ implements OnInit {
         'Please select a vehicle.';
 
       return;
-
     }
-
-
-    if (!this.searchQuery.trim()) {
-
-      this.error =
-        'Please enter a part to search for.';
-
-      return;
-
-    }
-
-
-    this.loading = true;
 
 
     const query =
       this.searchQuery.trim();
 
 
-    console.log(
-      'SEARCH START',
-      this.selectedVehicle,
-      query
-    );
+    if (!query) {
+
+      this.error =
+        'Please enter a part to search for.';
+
+      return;
+    }
+
+
+    this.loading = true;
 
 
     this.partService
-
       .searchParts(
-
         this.selectedVehicle,
-
-        query
-
+        query,
       )
-
       .subscribe({
 
         next: data => {
 
-          console.log(
-            'SEARCH RESPONSE',
-            data
-          );
-
-
-          this.results = data ?? [];
-
-
-          console.log(
-            'RESULT COUNT',
-            this.results.length
-          );
-
-
-          console.log(
-            'RESULTS AFTER ASSIGN',
-            this.results
-          );
-
+          this.results =
+            data ?? [];
 
           this.loading = false;
 
-
-          console.log(
-            'LOADING AFTER SUCCESS',
-            this.loading
-          );
-
+          this.cdr.detectChanges();
         },
 
 
         error: err => {
 
           console.error(
-            'SEARCH ERROR',
-            err
+            'Part search error',
+            err,
           );
 
-
           this.results = [];
-
 
           this.error =
             err.error?.error ??
             'Search failed. Please try again.';
 
-
           this.loading = false;
 
-
-          console.log(
-            'LOADING AFTER ERROR',
-            this.loading
-          );
-
+          this.cdr.detectChanges();
         },
 
       });
-
   }
-
 }
